@@ -4,7 +4,7 @@
 ### GRYPHGEN
 
 #### Project Overview
-Project GRYPHGEN aims to demonstrate the integration and collaboration of multiple Language Learning Models (LLMs) in a bare-metal environment. The project focuses on automating code generation, analysis, task alignment, optimization, and deployment using LLMs A (Code Generator), B (Code Analyzer), C (Task Monitor), and D (Workflow Optimizer). The project will showcase the effectiveness of these LLMs in a continuous deployment and optimization process while interacting with the Target Server.
+Project GRYPHGEN aims to demonstrate the integration and collaboration of multiple Large Language Models (LLMs). The project focuses on automating code generation, analysis, task alignment, optimization, and deployment using LLMs A (Code Generator), B (Code Analyzer), C (Task Monitor), and D (Workflow Optimizer). The project will showcase the effectiveness of these LLMs in a continuous deployment and optimization process while interacting with the Target Server.
 
 #### Objectives
 1. **Integration & Communication**: Demonstrate the integration and communication among LLMs A, B, C, and D.
