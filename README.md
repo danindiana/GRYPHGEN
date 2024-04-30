@@ -1,7 +1,7 @@
 # GRYPHGEN
 Grid Resource Prioritization in Heterogeneous Environments
 
-GRYPHGEN is a grid resource intelligent framework for yield optimization network, developed by Calisota.ai. It aims to optimize resource utilization and improve the efficiency of grid computing systems.
+GRYPHGEN uses LLMs to automate the production of software at scale, developed by Calisota.ai. It aims to optimize resource utilization and improve the efficiency of grid computing systems.
 
 The framework consists of several components:
 
