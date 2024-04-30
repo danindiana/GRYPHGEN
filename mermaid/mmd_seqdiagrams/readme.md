@@ -1,1 +1,1 @@
-![image](https://github.com/danindiana/GRYPHGEN/assets/3030588/7cff2a02-0266-4383-80d6-9e77ec45462d)
+![abaa00390--678976866](https://github.com/danindiana/GRYPHGEN/assets/3030588/161eef38-4bf8-40e1-bac3-d8160344e8bb)
