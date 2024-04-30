@@ -1,7 +1,10 @@
 # GRYPHGEN
-Grid Resource Prioritization in Heterogeneous Environments
 
-Developed by Calisota.ai, GRYPHGEN uses LLMs to automate the production of software at scale. It aims to optimize resource utilization and improve the efficiency of grid computing systems.
+'Grid Resource Prioritization in Heterogeneous Environments'
+
+
+Gryphgen harnesses LLMs to automate software production at scale.
+
 
 The framework consists of several components:
 
