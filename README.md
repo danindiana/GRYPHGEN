@@ -5,7 +5,7 @@ GRYPHGEN uses LLMs to automate the production of software at scale, developed by
 
 The framework consists of several components:
 
-1. SYMORQ: Systems Orchestration for Resource Quality, is an LLM-based orchestration OS that uses ZeroMQ message passing API. It is responsible for managing and coordinating the resources in the grid.
+1. SYMORQ: Systems Orchestration for Resource Quality, is an LLM-based orchestration service that uses ZeroMQ message passing API. It is responsible for managing and coordinating the resources in the grid.
 
 2. SYMORG: Systems Orchestration Retrieval Generator, is an LLM automated RAG constructor. It helps in generating and retrieving resource allocation and scheduling information.
 
