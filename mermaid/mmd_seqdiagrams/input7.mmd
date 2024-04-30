@@ -1,0 +1,39 @@
+sequenceDiagram
+    participant D as Deployment Manager
+    participant K as Kubernetes Orchestration
+    participant N as Nodes in the Cluster
+
+    D->>K: Deploy Services
+    Note over K: Distribute Services Across Nodes
+    K-->>N: Deploy Instances
+    Note over N: Services Running on Multiple Nodes
+
+    D->>K: Configure Load Balancing
+    Note over K: Setup Load Balancers for Services
+    K-->>N: Distribute Traffic Evenly
+    Note over N: Balance Load Across Instances
+
+    D->>K: Implement High Availability
+    Note over K: Replicate Services Across Nodes
+    K-->>N: Ensure Redundancy
+    Note over N: Multiple Replicas for Resilience
+
+    D->>K: Set Resource Management
+    Note over K: Define Resource Limits and Autoscaling
+    K-->>N: Adjust Resources Dynamically
+    Note over N: Scale Based on Load
+
+    D->>K: Enforce Security Policies
+    Note over K: Apply Network and Pod Security Policies
+    K-->>N: Secure Communication and Operations
+    Note over N: Restricted Access and Encrypted Data
+
+    D->>K: Monitor System Performance
+    Note over K: Setup Monitoring Tools (e.g., Prometheus)
+    K-->>N: Continuously Monitor Health and Metrics
+    Note over N: Real-time Performance Data
+
+    D->>K: Continuous Deployment Integration
+    Note over K: Automate Updates and Rollbacks
+    K-->>N: Update Services Seamlessly
+    Note over N: Minimal Downtime, Consistent Updates

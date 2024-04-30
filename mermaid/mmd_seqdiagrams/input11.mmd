@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant CCDE
+    participant RabbitMQ_Exchange
+    participant DSS
+    participant ALM
+
+    CCDE->>+RabbitMQ_Exchange: Publishes code generation results to a specific topic
+    activate RabbitMQ_Exchange
+    RabbitMQ_Exchange->>DSS_Queue: Routes message to DSS queue for task alignment check
+    RabbitMQ_Exchange->>ALM_Queue: Routes message to ALM queue for learning and updates
+    deactivate RabbitMQ_Exchange
+    DSS->>DSS_Queue: Consumes code generation results and performs alignment check
+    ALM->>ALM_Queue: Consumes code and feedback data for model updates

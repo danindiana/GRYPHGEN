@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant Task_Scheduler
+    participant Worker_Manager
+    participant Worker_A
+    participant Worker_B
+
+    Task_Scheduler->>+PubSub_Socket: Publishes new task with priority and parameters
+    activate PubSub_Socket
+    PubSub_Socket->>Worker_Manager: Delivers task message
+    deactivate PubSub_Socket
+    Worker_Manager->>+Worker_A: Assigns task to available worker
+    Worker_Manager->>+Worker_B:  (Optional) Assigns additional tasks based on workload balancing
+    Worker_A->>+Worker_Manager: Sends status updates or completion notification
+    Worker_B->>+Worker_Manager:  (Optional) Sends status updates or completion notification 

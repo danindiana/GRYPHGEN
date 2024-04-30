@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant D as Developer
+    participant CMS as Combined Module (CCDE + SIOS)
+
+    D->>CMS: Initiate Code Generation Request
+    Note over CMS: Process Code Generation
+    CMS-->>D: Deliver Generated Code
+
+    D->>CMS: Submit Generated Code for Review
+    CMS->>CMS: Perform Error Analysis
+    Note over CMS: Analyze and Detect Errors
+
+    CMS->>CMS: Self-Monitor System Performance
+    Note over CMS: Monitor and Optimize Performance
+    
+    CMS->>CMS: Apply Self-Healing and Bias Reduction
+    Note over CMS: Continuous Self-Optimization
+
+    CMS-->>D: Provide Feedback and Optimized Code
+    Note over D: Review and Use Optimized Code

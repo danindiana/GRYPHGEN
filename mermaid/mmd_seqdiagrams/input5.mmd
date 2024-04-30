@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant D as Developer
+    participant CCDE as CCDE + SIOS Combined Module
+
+    D->>CCDE: Request Code Generation
+    CCDE-->>D: Generate Code
+    Note over CCDE: Code Generation
+
+    D->>CCDE: Submit for Error Analysis
+    CCDE-->>D: Analyze and Detect Errors
+    Note over CCDE: Error Detection
+
+    D->>CCDE: Observe System Performance
+    CCDE-->>D: Monitor and Optimize Performance
+    Note over CCDE: Performance Monitoring
+
+    CCDE->>CCDE: Self-Monitor
+    CCDE-->>CCDE: Self-Optimize
+    Note over CCDE: Continuous Self-Optimization

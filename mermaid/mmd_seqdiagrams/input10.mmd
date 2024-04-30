@@ -1,0 +1,82 @@
+sequenceDiagram
+    participant User
+    participant Web_Interface
+    participant LLMD
+    participant CCDE
+    participant LLMA
+    participant LLMB
+    participant DSS
+    participant ALM
+    participant SIM
+    participant Knowledge_Base
+    participant Target_Server
+
+    User->>+Web_Interface: Submits task with project details and parameters
+    activate Web_Interface
+    Web_Interface->>+LLMD: Forwards task and requests resource allocation
+    activate LLMD
+    LLMD->>Resource_Manager: Checks resource availability
+    alt Resources Available
+        LLMD->>+CCDE: Sends task and allocates resources
+        activate CCDE
+        CCDE->>+LLMA: Provides prompts for code generation
+        activate LLMA
+        LLMA->>Knowledge_Base: Retrieves information and context
+        LLMA-->>-CCDE: Returns generated code
+        deactivate LLMA
+        CCDE->>+LLMB: Sends code for analysis
+        activate LLMB
+        LLMB-->>-CCDE: Returns analysis and feedback
+        deactivate LLMB
+        loop Code Refinement
+            CCDE->>+LLMA: Requests code refinement
+            activate LLMA
+            LLMA-->>-CCDE: Returns refined code
+            deactivate LLMA
+            CCDE->>+LLMB: Sends code for analysis
+            activate LLMB
+            LLMB-->>-CCDE: Provides updated feedback 
+            deactivate LLMB
+        end
+        CCDE->>+DSS: Sends code for task alignment check
+        activate DSS
+        DSS->>Knowledge_Base: Accesses project parameters
+        alt Alignment Confirmed
+            DSS-->>-CCDE: Confirms alignment
+            CCDE->>+Target_Server: Deploys code to build environment
+            activate Target_Server
+            Target_Server-->>-CCDE: Reports build status
+            deactivate Target_Server
+            alt Build Successful
+                CCDE->>+Target_Server: Deploys code to production
+                activate Target_Server
+                Target_Server-->>-CCDE: Confirms deployment
+                deactivate Target_Server
+            else Build Failed
+                CCDE->>CCDE: Analyzes errors and restarts process
+            end
+        else Misalignment Detected 
+            DSS-->>-CCDE: Requests modifications
+        end   
+        CCDE->>+ALM: Shares code and feedback for learning
+        activate ALM
+        ALM->>Knowledge_Base: Updates knowledge base 
+        ALM->>LLMA: Provides model updates 
+        ALM->>LLMB: Provides model updates
+        deactivate ALM
+    else Resources Unavailable
+        LLMD->>Web_Interface: Reports resource unavailability
+    end 
+    deactivate LLMD
+    Web_Interface-->>-User: Provides status update or results
+    deactivate Web_Interface
+    loop Continuous Monitoring 
+        DSS->>DSS: Monitors system health
+        DSS->>DSS: Analyzes logs and detects anomalies 
+        alt Anomaly Detected
+            DSS->>SIM: Reports security incidents 
+            activate SIM
+            SIM->>SIM: Investigates and mitigates threats
+            deactivate SIM
+        end 
+    end

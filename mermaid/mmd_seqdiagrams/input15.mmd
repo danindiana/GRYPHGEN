@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant CCDE
+    participant LLMA
+    participant LLMB
+    participant Target_Server
+
+    CCDE->>+LLMA: Provides prompts and instructions for code generation
+    activate LLMA
+    LLMA->>Knowledge_Base: Retrieves relevant information and context
+    LLMA-->>-CCDE: Returns generated code
+    deactivate LLMA
+    CCDE->>+LLMB: Sends generated code for analysis
+    activate LLMB
+    LLMB-->>-CCDE: Provides feedback and potential error reports
+    deactivate LLMB
+    loop Code Refinement
+        CCDE->>+LLMA: Adjusts prompts and requests code refinement
+        activate LLMA
+        LLMA-->>-CCDE: Returns refined code
+        deactivate LLMA
+        CCDE->>+LLMB: Sends refined code for analysis 
+        activate LLMB
+        LLMB-->>-CCDE: Provides updated feedback
+        deactivate LLMB
+    end
+    CCDE->>+Target_Server: Deploys generated code to build environment
+    activate Target_Server
+    Target_Server-->>-CCDE: Reports build status and potential errors
+    deactivate Target_Server
+    alt Build Successful
+        CCDE->>+Target_Server: Deploys code to production environment
+    else Build Failed
+        CCDE->>CCDE: Analyzes errors and restarts code generation process
+    end 

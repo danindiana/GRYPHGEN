@@ -1,0 +1,28 @@
+sequenceDiagram
+participant A as Code Generator
+participant B as Code Analyzer
+participant C as Task Monitor
+participant D as Workflow Optimizer
+participant Target_Server as Ubuntu Linux
+
+activate A
+A->>+B: Generate code output
+activate B
+B->>+A: Analyze output for errors
+B->>+C: Check alignment with project parameters
+activate C
+C->>+B: Monitor output for proper function
+B->>+D: Prevent roadblocks for A, B, and C
+activate D
+loop Optimization Cycle
+D->>+B: Restart processes as needed
+D->>+C: Revert to previous checkpoints
+end
+A->>+Target_Server: Write code and execute tasks
+B->>+Target_Server: Analyze code for errors and suggestions
+C->>+Target_Server: Ensure alignment with assigned tasks
+D->>+Target_Server: Optimize workflow
+deactivate A
+deactivate B
+deactivate C
+deactivate D

@@ -1,0 +1,10 @@
+sequenceDiagram
+    participant CCDE
+    participant DSS
+    participant SIM
+    participant Data_Aggregator
+
+    CCDE->>+Data_Aggregator: Sends code generation and analysis logs
+    DSS->>+Data_Aggregator: Sends resource management and system health logs
+    SIM->>+Data_Aggregator: Sends security and access control logs 
+    Data_Aggregator->>+Centralized_Log_Repository: Forwards aggregated logs

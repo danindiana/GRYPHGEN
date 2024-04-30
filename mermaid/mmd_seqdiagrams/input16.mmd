@@ -1,0 +1,16 @@
+sequenceDiagram
+    participant Developer
+    participant Web_Interface
+    participant LLMD
+    participant CCDE
+
+    Developer->>+Web_Interface: Submits code generation request with specifications
+    activate Web_Interface
+    Web_Interface->>+LLMD: Forwards request and project details
+    activate LLMD
+    LLMD->>Resource_Manager: Checks resource availability on Target_Server
+    LLMD->>+CCDE: Sends request and allocates resources on Target_Server
+    activate CCDE
+    deactivate LLMD
+    Web_Interface-->>-Developer: Confirms request and provides tracking ID
+    deactivate Web_Interface

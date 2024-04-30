@@ -1,0 +1,70 @@
+sequenceDiagram
+    participant Developer
+    participant Web_Interface
+    participant LLMD
+    participant CCDE
+    participant LLMA
+    participant LLMB
+    participant DSS
+    participant ALM
+    participant Knowledge_Base
+    participant Target_Server
+
+    Developer->>+Web_Interface: Submits request: "Build RAG system" (Python, DPR, Transformers, Faiss) 
+    activate Web_Interface
+    Web_Interface->>+LLMD: Forwards request and parameters 
+    activate LLMD
+    LLMD->>Resource_Manager: Checks Target_Server resource availability
+    alt Resources Available
+        LLMD->>+CCDE: Assigns task and resources on Target_Server
+        activate CCDE
+        CCDE->>+LLMA: Prompts for RAG system code (Python, DPR, Transformers, Faiss)
+        activate LLMA
+        LLMA->>Knowledge_Base: Retrieves relevant information and examples
+        LLMA-->>-CCDE: Returns generated RAG system code
+        deactivate LLMA
+        CCDE->>+LLMB: Sends code for analysis
+        activate LLMB
+        LLMB-->>-CCDE: Provides feedback and error reports
+        deactivate LLMB
+        loop Code Refinement
+            CCDE->>+LLMA: Requests code refinement based on feedback
+            activate LLMA
+            LLMA-->>-CCDE: Returns refined code
+            deactivate LLMA 
+            CCDE->>+LLMB: Sends refined code for analysis
+            activate LLMB
+            LLMB-->>-CCDE: Provides updated feedback
+            deactivate LLMB
+        end 
+        CCDE->>+DSS: Sends code for task alignment check
+        activate DSS
+        DSS->>Knowledge_Base: Accesses project parameters 
+        alt Alignment Confirmed
+            DSS-->>-CCDE: Confirms alignment
+            CCDE->>+Target_Server: Deploys RAG code for building
+            activate Target_Server
+            Target_Server->>Target_Server: Installs dependencies (Transformers, Faiss)
+            Target_Server->>Target_Server: Builds and tests RAG system
+            Target_Server-->>-CCDE: Reports build status and potential errors
+            deactivate Target_Server
+            alt Build Successful
+                CCDE->>+Target_Server: Deploys RAG system to production
+            else Build Failed
+                CCDE->>CCDE: Analyzes errors and restarts process
+            end
+        else Misalignment Detected
+            DSS-->>-CCDE: Requests modifications
+        end
+        CCDE->>+ALM: Shares code and feedback for learning
+        activate ALM
+        ALM->>Knowledge_Base: Updates knowledge base with new RAG info
+        ALM->>LLMA:  Provides model updates for RAG generation
+        ALM->>LLMB:  Provides model updates for RAG analysis 
+        deactivate ALM
+    else Resources Unavailable
+        LLMD->>Web_Interface: Reports resource unavailability
+    end
+    deactivate LLMD
+    Web_Interface-->>-Developer: Provides status update or results
+    deactivate Web_Interface
