@@ -14,7 +14,7 @@ The framework consists of several components:
 
 3. SYMAUG: Smart Yielding Microservices for Agile and Ultra-Portable Grids, is a dockerized or virtual machine implementation of the CCDE-SIOS ensemble. It provides a lightweight and portable solution for grid computing.
 
-Overall, GRYPHGEN aims to improve the efficiency and resource utilization of grid computing systems by providing a smart and intelligent framework for resource optimization.
+Overall, GRYPHGEN aims to improve the efficiency and resource utilization of grid computing systems by providing a smart framework for resource optimization.
 
 ![image](https://github.com/danindiana/GRYPHGEN/assets/3030588/525370bc-a8f2-46c6-98bd-58590e3d2a8f)
 
