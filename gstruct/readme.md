@@ -28,8 +28,7 @@ SYMAUG Directory:
 ------------------
 
 1. The `microservices` directory contains Dockerized or virtual machine implementations of the CCDE-SIOS ensemble. The CCDE-SIOS ensemble is a collection of microservices that provide lightweight and portable solutions for grid computing. Each microservice is designed to perform a specific function within the grid and can be deployed and scaled independently. The `ccde-sios-service1.dockerfile`, `ccde-sios-service2.dockerfile`, and other related files in this directory are used to build and manage the microservices.
- Ils sont des fichiers spécifiques aux microservices qui fournissent des solutions légères et portables pour les systèmes de calcul en grille. Chaque microservice est conçu pour effectuer une fonction spécifique dans le réseau et peut être déployé et échantillonné de manière indépendante. Les fichiers `ccde-sios-service1.dockerfile`, `ccde-sios-service2.dockerfile` et d'autres fichiers connexes dans ce dossier sont utilisés pour construire et gérer les microservices.
-
+ 
 2. The `documentation` directory contains documentation for SYMAUG, including general documentation, usage instructions for the microservices, and best practices for using SYMAUG. These documents help users understand how to deploy, monitor, and maintain the microservices effectively.
 
 3. The `scripts` directory contains scripts for deploying, monitoring, maintaining, and scaling the SYMAUG microservices. These scripts automate the process of managing the microservices and help ensure that they are running efficiently and reliably.
