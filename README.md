@@ -1,6 +1,6 @@
 # GRYPHGEN
 
-GRYPHGEN pronounced 'Griffin' stands for (Grid Resource Prioritization in Heterogeneous Environments) is a framework that leverages large language models (LLMs) to automate software production at scale. The framework consists of three main components: SYMORQ, SYMORG, and SYMAUG.
+GRYPHGEN pronounced 'Griffin' stands for Grid Resource Prioritization in Heterogeneous Environments. Gryphgen is a framework that leverages large language models (LLMs) to automate software production at scale. The framework consists of three main components: SYMORQ, SYMORG, and SYMAUG.
 
 1. SYMORQ (Systems Orchestration for Resource Quality): This component is an LLM-based orchestration service that uses the ZeroMQ message passing API to manage and coordinate resources in the grid. It ensures that resources are utilized efficiently and effectively to meet the demands of the software production process.
 
