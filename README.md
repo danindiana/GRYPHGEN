@@ -24,9 +24,6 @@ By breaking down the workflow into these distinct stages, the sequence diagrams 
 
 ![image](https://github.com/danindiana/GRYPHGEN/assets/3030588/525370bc-a8f2-46c6-98bd-58590e3d2a8f)
 
-Gryphgen utilizes a series of interconnected sequence diagrams to describe its operation. These diagrams illustrate the various stages of the process, including task submission and initialization, code generation and analysis, task monitoring and workflow optimization, continuous deployment and monitoring, and adaptive learning and system evolution. By breaking down the workflow into these distinct stages, the diagrams provide a comprehensive understanding of how Gryphgen functions.
-
-
 [![](https://mermaid.ink/img/pako:eNp1kcFOwzAMhl8l8rmrmrR0bQ5Ik4CdJmDTDqBeosYqFWoyklQwpr077rqJASMnx_7y-7ezg9pqBAke33o0Nd60qnGqqwyjs_bo2GRyzVZPi_vlo2S3JlDGEds67NAEP4JjfUCP7FyyO-veldP_0fMzmpRXQbnAGjToVGhNwwZfF_HZmsSXg10fSNzb3tX4rUzlnz5m3reNuUD-8TAfu-Pv3sfBhm1I9kBCNMrJKuoDDRF06DrVatrlbnhbQXihoSuQFGrlXiuozJ441Qe72poaZHA9RtBvNMkc935KbpR5tvb8CnIHHyCFyOIi46lIiqtpXqaliGALkmdJnIqM87RM8oTzfB_B50EgifM0z0Q5LfK8EFwUZQSo22DdYvz5g_39F1sCoCM?type=png)](https://mermaid.live/edit#pako:eNp1kcFOwzAMhl8l8rmrmrR0bQ5Ik4CdJmDTDqBeosYqFWoyklQwpr077rqJASMnx_7y-7ezg9pqBAke33o0Nd60qnGqqwyjs_bo2GRyzVZPi_vlo2S3JlDGEds67NAEP4JjfUCP7FyyO-veldP_0fMzmpRXQbnAGjToVGhNwwZfF_HZmsSXg10fSNzb3tX4rUzlnz5m3reNuUD-8TAfu-Pv3sfBhm1I9kBCNMrJKuoDDRF06DrVatrlbnhbQXihoSuQFGrlXiuozJ441Qe72poaZHA9RtBvNMkc935KbpR5tvb8CnIHHyCFyOIi46lIiqtpXqaliGALkmdJnIqM87RM8oTzfB_B50EgifM0z0Q5LfK8EFwUZQSo22DdYvz5g_39F1sCoCM)
 
 
