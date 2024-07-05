@@ -24,7 +24,24 @@ The overall goal of GRYPHGEN is to create a self-deploying LLM cooperative progr
 
 By breaking down the workflow into these distinct stages, the sequence diagrams provide a comprehensive understanding of how Gryphgen functions and how it can be used to automate software production at scale.
 
+```mermaid
+sequenceDiagram
+    participant A as Code Generator
+    participant B as Code Analyzer
+    participant C as Task Monitor
+    participant D as Workflow Optimizer
+    participant Target_Server as Ubuntu Linux
 
-[![](https://mermaid.ink/img/pako:eNp1kcFOwzAMhl8l8rmrmrR0bQ5Ik4CdJmDTDqBeosYqFWoyklQwpr077rqJASMnx_7y-7ezg9pqBAke33o0Nd60qnGqqwyjs_bo2GRyzVZPi_vlo2S3JlDGEds67NAEP4JjfUCP7FyyO-veldP_0fMzmpRXQbnAGjToVGhNwwZfF_HZmsSXg10fSNzb3tX4rUzlnz5m3reNuUD-8TAfu-Pv3sfBhm1I9kBCNMrJKuoDDRF06DrVatrlbnhbQXihoSuQFGrlXiuozJ441Qe72poaZHA9RtBvNMkc935KbpR5tvb8CnIHHyCFyOIi46lIiqtpXqaliGALkmdJnIqM87RM8oTzfB_B50EgifM0z0Q5LfK8EFwUZQSo22DdYvz5g_39F1sCoCM?type=png)](https://mermaid.live/edit#pako:eNp1kcFOwzAMhl8l8rmrmrR0bQ5Ik4CdJmDTDqBeosYqFWoyklQwpr077rqJASMnx_7y-7ezg9pqBAke33o0Nd60qnGqqwyjs_bo2GRyzVZPi_vlo2S3JlDGEds67NAEP4JjfUCP7FyyO-veldP_0fMzmpRXQbnAGjToVGhNwwZfF_HZmsSXg10fSNzb3tX4rUzlnz5m3reNuUD-8TAfu-Pv3sfBhm1I9kBCNMrJKuoDDRF06DrVatrlbnhbQXihoSuQFGrlXiuozJ441Qe72poaZHA9RtBvNMkc935KbpR5tvb8CnIHHyCFyOIi46lIiqtpXqaliGALkmdJnIqM87RM8oTzfB_B50EgifM0z0Q5LfK8EFwUZQSo22DdYvz5g_39F1sCoCM)
-
+    A->>+B: Generate code output
+    B->>+A: Analyze output for errors
+    B->>+C: Check alignment with project parameters
+    C->>+B: Monitor output for proper function
+    B->>+D: Prevent roadblocks for A, B, and C
+    D->>+B: Restart processes as needed
+    D->>+C: Revert to previous checkpoints
+    A->>+Target_Server: Write code and execute tasks
+    B->>+Target_Server: Analyze code for errors and suggestions
+    C->>+Target_Server: Ensure alignment with assigned tasks
+    D->>+Target_Server: Optimize workflow
+```
 
