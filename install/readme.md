@@ -5,6 +5,131 @@ graph TD
     SYMORQ[SYMORQ - Systems Orchestration for Resource Quality]
     SYMORG[SYMORG - Systems Orchestration Retrieval Generator]
     SYMAUG[SYMAUG - Smart Yielding Microservices for Agile and Ultra-Portable Grids]
+    TServer[Target Server]
+    DS[Data Storage]
+    ML[Monitoring and Logging]
+    SC[Security and Compliance]
+    CF[Community Feedback Loop]
+    CI[CI/CD Integration]
+    TI[Third-party Integrations]
+    LLAMA[LLAMA Data Structure Handling]
+    LM[Local Language Model]
+    BL[Blockchain Layer]
+    QC[Quantum Computing Module]
+
+    UI --> TS
+    TS --> SYMORQ
+    SYMORQ --> SYMORG
+    SYMORQ --> SYMAUG
+    SYMORG --> SYMORQ
+    SYMAUG --> TServer
+    TServer --> DS
+    TServer --> ML
+    ML --> SC
+    SC --> TServer
+    CF --> UI
+    CI --> TServer
+    TI --> UI
+    TI --> TS
+    TI --> SYMORQ
+    TI --> SYMORG
+    TI --> SYMAUG
+    TI --> TServer
+    BL --> SC
+    QC --> SYMORQ
+    QC --> SYMORG
+    QC --> SYMAUG
+    LLAMA --> LM
+    LM --> UI
+    LM --> SYMORQ
+    LM --> SYMORG
+    LM --> SYMAUG
+
+    subgraph Core Components
+        SYMORQ
+        SYMORG
+        SYMAUG
+    end
+
+    subgraph Supporting Infrastructure
+        TServer
+        DS
+        ML
+        SC
+        CI
+    end
+
+    subgraph User and Community Engagement
+        UI
+        CF
+        TI
+    end
+
+    subgraph Advanced Integration Layers
+        BL
+        QC
+        LLAMA
+        LM
+    end
+```
+Explanation of Components:
+User Interface (UI):
+
+The main interface through which users interact with the GRYPHGEN system. It allows users to submit tasks, receive updates, and provide feedback.
+Task Submitter (TS):
+
+Submits tasks initiated by the user to the orchestration system. Acts as the bridge between the UI and the core orchestration components.
+SYMORQ - Systems Orchestration for Resource Quality:
+
+Manages and coordinates resources for task execution, ensuring efficient utilization. Integrates various components to maintain optimal performance and resource distribution.
+SYMORG - Systems Orchestration Retrieval Generator:
+
+Retrieves relevant information and integrates it into task orchestration, enhancing resource utilization by providing context-aware data and prioritizing tasks.
+SYMAUG - Smart Yielding Microservices for Agile and Ultra-Portable Grids:
+
+Provides a lightweight and portable solution for deploying GRYPHGEN components across different platforms and architectures. Ensures microservices can be deployed and managed efficiently.
+Target Server (TServer):
+
+Executes tasks and runs the generated code. Interacts with data storage, monitoring, and CI/CD systems to ensure smooth execution and feedback.
+Data Storage (DS):
+
+Stores all necessary data for the GRYPHGEN system, including user-generated data, task execution logs, and historical data for analysis.
+Monitoring and Logging (ML):
+
+Continuously monitors system performance, logs task execution, and detects anomalies. Provides real-time analytics for proactive optimization.
+Security and Compliance (SC):
+
+Implements security protocols and ensures compliance with industry standards. Protects user data and maintains system integrity.
+Community Feedback Loop (CF):
+
+Collects feedback from users, developers, and stakeholders to guide future development and improvements. Ensures the system evolves to meet user expectations.
+CI/CD Integration (CI):
+
+Integrates with continuous integration and continuous deployment tools to streamline updates and deployment. Enhances development efficiency and reliability.
+Third-party Integrations (TI):
+
+Interfaces with third-party tools such as Jira, Slack, and Microsoft Teams for enhanced communication and project management.
+LLAMA Data Structure Handling:
+
+Provides flexible and performance portable parallelism to handle data structures efficiently across heterogeneous hardware architectures. Supports various memory layouts and data transformations.
+Local Language Model (LM):
+
+Enhances task management, resource allocation, and user interaction through advanced NLP capabilities. Integrated with LLAMA for efficient data structure handling.
+Blockchain Layer (BL):
+
+Provides an immutable record of transactions and data changes, enhancing security, transparency, and data integrity through decentralized technology.
+Quantum Computing Module (QC):
+
+Leverages quantum computing capabilities to solve complex optimization problems more efficiently, enhancing computational efficiency and performance.
+This updated diagram provides a comprehensive overview of the GRYPHGEN system, illustrating the relationships and interactions between its various components, including the integration of local language models using LLAMA for efficient data structure handling.
+
+```mermaid
+graph TD
+    UI[User Interface]
+    TS[Task Submitter]
+    SYMORQ[SYMORQ - Systems Orchestration for Resource Quality]
+    SYMORG[SYMORG - Systems Orchestration Retrieval Generator]
+    SYMAUG[SYMAUG - Smart Yielding Microservices for Agile and Ultra-Portable Grids]
     TS[Target Server]
     DS[Data Storage]
     ML[Monitoring and Logging]
