@@ -45,53 +45,6 @@ sequenceDiagram
     D->>+Target_Server: Optimize workflow
 ```
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Task_Submitter as Task Submitter
-    participant SYMORQ as SYMORQ (Orchestration)
-    participant SYMORG as SYMORG (Retrieval)
-    participant SYMAUG as SYMAUG (Execution)
-    participant LLAMA as LLAMA Data Structure Handling
-    participant LM as Local Language Model
-    participant Target_Server as Ubuntu Linux
-
-    User->>Task_Submitter: Submit Task
-    Task_Submitter->>SYMORQ: Initialize Task
-    SYMORQ->>SYMORG: Fetch Relevant Data
-    SYMORG->>LLAMA: Retrieve Data Structure
-    LLAMA->>LM: Process with Local Language Model
-    LM->>LLAMA: Return Processed Data
-    LLAMA->>SYMORG: Provide Data
-    SYMORG->>SYMORQ: Return Data
-    SYMORQ->>SYMORG: Analyze Code
-    SYMORG->>LLAMA: Use Data Structure for Analysis
-    LLAMA->>SYMORG: Return Analysis
-    SYMORG->>SYMORQ: Provide Analysis
-    SYMORQ->>SYMAUG: Execute Task
-    SYMAUG->>Target_Server: Deploy Code
-    Target_Server->>SYMAUG: Return Execution Results
-    SYMAUG->>SYMORQ: Report Results
-    SYMORQ->>Task_Submitter: Finalize Task
-    Task_Submitter->>User: Return Task Output
-
-    loop Continuous Monitoring
-        SYMORQ->>SYMORG: Monitor Task
-        SYMORG->>LLAMA: Monitor Data Structure
-        LLAMA->>SYMORG: Return Feedback
-        SYMORG->>SYMORQ: Provide Feedback
-        SYMORQ->>SYMAUG: Optimize Workflow
-        SYMAUG->>Target_Server: Adjust Execution
-        Target_Server->>SYMAUG: Return Adjusted Results
-        SYMAUG->>SYMORQ: Report Adjusted Results
-    end
-
-    Note right of SYMORG: Adaptive Learning
-    Note right of SYMAUG: System Evolution
-```
-
-I understand, let's integrate the use of local language models running on LLAMA for automating the code generation within the GRYPHGEN framework.
-
 ### Integrated System Overview and Sequence Diagram
 
 ```mermaid
