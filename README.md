@@ -44,8 +44,44 @@ sequenceDiagram
     C->>+Target_Server: Ensure alignment with assigned tasks
     D->>+Target_Server: Optimize workflow
 ```
+```mermaid
+sequenceDiagram
+    participant A as Code Generator (LLM A)
+    participant B as Code Analyzer (LLM B)
+    participant C as Task Monitor (LLM C)
+    participant D as Workflow Optimizer (LLM D)
+    participant TS as Target_Server
 
-### Integrated System Overview and Sequence Diagram
+    A->>+B: Generates code and sends output
+    B-->>-A: Analyzes output, returns error analysis or feedback
+    A->>+C: Sends output for task alignment check
+    C-->>-A: Confirms if outputs align with project parameters
+    A->>+D: Requests process management
+    D-->>-A: Restarts process or reverts to last known good checkpoint
+    A->>+TS: Connects to server, executes development tasks
+    B->>+TS: Analyzes and reasons about output from A
+    C->>+TS: Ensures A's outputs align with project parameters
+    D->>+TS: Manages workflow, avoids roadblocks, maintains efficiency
+
+    loop Health Monitoring
+        D->>D: Monitors system health and performance
+    end
+
+    loop Dynamic Output Adjustment
+        C->>C: Reviews outputs of A and B
+        D->>C: Adjusts processes based on C's feedback
+    end
+
+    loop Continuous Deployment
+        A->>TS: Deploys code
+        B->>TS: Deploys feedback mechanisms
+        C->>TS: Ensures continuous alignment
+        D->>TS: Ensures smooth deployment
+    end
+```
+
+
+### Integrated System RoadMap Overview and Sequence Diagram
 
 ```mermaid
 graph TD
@@ -120,49 +156,4 @@ graph TD
         LLAMA
         LM
     end
-```
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Task_Submitter as Task Submitter
-    participant SYMORQ as SYMORQ (Orchestration)
-    participant SYMORG as SYMORG (Retrieval)
-    participant SYMAUG as SYMAUG (Execution)
-    participant LLAMA as LLAMA Data Structure Handling
-    participant LM as Local Language Model
-    participant Target_Server as Ubuntu Linux
-
-    User->>Task_Submitter: Submit Task
-    Task_Submitter->>SYMORQ: Initialize Task
-    SYMORQ->>SYMORG: Fetch Relevant Data
-    SYMORG->>LLAMA: Retrieve Data Structure
-    LLAMA->>LM: Process with Local Language Model
-    LM->>LLAMA: Return Processed Data
-    LLAMA->>SYMORG: Provide Data
-    SYMORG->>SYMORQ: Return Data
-    SYMORQ->>SYMORG: Analyze Code
-    SYMORG->>LLAMA: Use Data Structure for Analysis
-    LLAMA->>SYMORG: Return Analysis
-    SYMORG->>SYMORQ: Provide Analysis
-    SYMORQ->>SYMAUG: Execute Task
-    SYMAUG->>Target_Server: Deploy Code
-    Target_Server->>SYMAUG: Return Execution Results
-    SYMAUG->>SYMORQ: Report Results
-    SYMORQ->>Task_Submitter: Finalize Task
-    Task_Submitter->>User: Return Task Output
-
-    loop Continuous Monitoring
-        SYMORQ->>SYMORG: Monitor Task
-        SYMORG->>LLAMA: Monitor Data Structure
-        LLAMA->>SYMORG: Return Feedback
-        SYMORG->>SYMORQ: Provide Feedback
-        SYMORQ->>SYMAUG: Optimize Workflow
-        SYMAUG->>Target_Server: Adjust Execution
-        Target_Server->>SYMAUG: Return Adjusted Results
-        SYMAUG->>SYMORQ: Report Adjusted Results
-    end
-
-    Note right of SYMORG: Adaptive Learning
-    Note right of SYMAUG: System Evolution
 ```
