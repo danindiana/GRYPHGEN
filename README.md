@@ -1,4 +1,3 @@
-![image](https://github.com/danindiana/GRYPHGEN/assets/3030588/525370bc-a8f2-46c6-98bd-58590e3d2a8f)
 
 GRYPHGEN pronounced 'Griffin' stands for Grid Resource Prioritization in Heterogeneous Environments. Gryphgen is a framework that leverages large language models (LLMs) to automate software production at scale. The framework consists of three main components: SYMORQ, SYMORG, and SYMAUG.
 
