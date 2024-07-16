@@ -10,7 +10,7 @@ GRYPHGEN pronounced 'Griffin' stands for Grid Resource Prioritization in Heterog
 
 3. SYMAUG (Smart Yielding Microservices for Agile and Ultra-Portable Grids): This component is a dockerized or virtual machine implementation of the CCDE-SIOS ensemble. It provides a lightweight and portable solution for Gryphgen deployment across various platforms and hardware architectures. This ensures that Gryphgen can be easily integrated into different environments and used to produce software at scale.
 
-The overall goal of GRYPHGEN is to create a self-deploying LLM cooperative programming environment capable of producing any type of software at any level of complexity and scale. To illustrate the workflow of Gryphgen, a series of interconnected sequence diagrams are used to describe the stages of operation, including:
+Motivation: GRYPHGEN creates a self-deploying LLM cooperative programming environment capable of producing any type of software at any level of complexity and scale. To illustrate the workflow of Gryphgen, a series of interconnected sequence diagrams are used to describe the stages of operation, including:
 
 - Task submission and initialization: The code generator (A) generates code output, which is analyzed by the code analyzer (B) for errors and alignment with project parameters. The task monitor (C) ensures that the output functions properly and aligns with assigned tasks.
 
