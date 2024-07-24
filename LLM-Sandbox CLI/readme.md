@@ -1,5 +1,87 @@
 ## LLM-Sandbox CLI
 
+To grant a local small 'quantized' language model running on jan.ai, lm-studio, or llama service access to a virtual machine (VM) with Ubuntu OS and a bash command line environment, follow these steps:
+
+### Step 1: Set Up the Virtual Machine
+
+1. **Install VirtualBox or VMware:**
+   - Install [VirtualBox](https://www.virtualbox.org/) or [VMware](https://www.vmware.com/).
+   - Download the Ubuntu ISO from the [official Ubuntu website](https://ubuntu.com/download/desktop).
+
+2. **Create a New VM:**
+   - Open VirtualBox/VMware and create a new VM.
+   - Allocate resources based on your hardware capabilities (e.g., 8 GB RAM, 4 CPU cores).
+   - Attach the Ubuntu ISO to the VM and install Ubuntu.
+
+### Step 2: Configure SSH Access
+
+1. **Install SSH Server on VM:**
+   - Open a terminal in the VM and run:
+     ```bash
+     sudo apt update
+     sudo apt install openssh-server
+     sudo systemctl enable ssh
+     sudo systemctl start ssh
+     ```
+
+2. **Set Up Port Forwarding (VirtualBox):**
+   - Open the VM settings in VirtualBox.
+   - Go to the "Network" section, and select "Advanced" -> "Port Forwarding."
+   - Add a new rule to forward a port (e.g., Host Port 2222 to Guest Port 22).
+
+3. **Set Up Port Forwarding (VMware):**
+   - Open the VM settings in VMware.
+   - Go to "Network Adapter" -> "Advanced" and configure port forwarding.
+
+### Step 3: Set Up Python Environment and Libraries
+
+1. **Install Required Libraries:**
+   - On the VM, open a terminal and run:
+     ```bash
+     sudo apt update
+     sudo apt install python3-pip
+     pip3 install janai lm-studio llama
+     ```
+
+### Step 4: Enable Model Access to VM
+
+1. **Run the Model with Access to VM:**
+   - On your host machine, use SSH to connect to the VM. You can automate the SSH connection in your Python code:
+     ```python
+     import paramiko
+
+     host = "localhost"
+     port = 2222
+     username = "your-username"
+     password = "your-password"
+
+     ssh = paramiko.SSHClient()
+     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+     ssh.connect(host, port, username, password)
+
+     stdin, stdout, stderr = ssh.exec_command("ls -la")
+     print(stdout.read().decode())
+     ssh.close()
+     ```
+
+2. **Integrate with Jan/LM-Studio/Llama:**
+   - Modify the language model's configuration or code to send commands to the VM via SSH using a similar approach as shown above.
+   - Ensure the model can parse and interpret the output from the VM to perform subsequent tasks.
+
+### Step 5: Run the Model
+
+1. **Start the Model Service:**
+   - Ensure jan.ai, lm-studio, or llama service is running on your host machine.
+   - Load the quantized model and configure it to execute commands via SSH.
+
+2. **Test the Setup:**
+   - Run a few test commands from the model to ensure it can access and execute tasks on the VM.
+
+This setup allows your local quantized language model to access a VM running Ubuntu and execute tasks in a bash command line environment. If you encounter any issues or need further customization, let me know!
+
+
+
+
 To grant a local, quantized language model (like those available through services such as jan.ai/lm-studio/llama) access to a virtual machine (VM) running Ubuntu OS, enabling it to execute tasks via the bash command line and suggest project and file names, you would typically follow a process involving several key steps. This process ensures secure access and controlled execution of commands by the language model.
 
 ### Step 1: Setup Secure Access
