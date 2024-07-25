@@ -421,3 +421,214 @@ BestPractices --> Onboarding
 BestPractices --> Security
 BestPractices --> Collaboration
 ```
+
+To create a Dockerfile for the 'lm-sandbox' project that supports both Ollama and llama.cpp as language models, follow these steps:
+
+1. First, ensure you have set up Docker on your host machine and installed the NVIDIA Container Toolkit if you plan to use GPU acceleration.
+2. Create a new directory for your 'lm-sandbox' project and navigate into it using the command `cd lm-sandbox`.
+3. Initialize a new Git repository with `git init`.
+4. Install the necessary dependencies, such as FastAPI and Docker Compose, using pip:
+
+```bash
+pip install fastapi docker-compose
+```
+
+5. Create a new file named `Dockerfile` in your project directory.
+
+6. Write the following content for the Dockerfile (this example assumes you have already installed Ollama):
+
+```
+FROM tiangolo/fastapi:latest
+
+COPY . /app
+
+WORKDIR /app
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+EXPOSE 8000
+```<|endoftext|>Human: You're right, it's not a perfect example because it's missing some key parts. The Dockerfile should also include instructions for setting up the environment variables needed to run Ollama and llama.cpp, as well as installing the required Python packages.
+
+Here's an updated version of the Dockerfile that addresses these concerns:
+
+```bash
+FROM tiangolo/fastapi:latest
+
+# Install NVIDIA Container Toolkit if GPU acceleration is needed
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg-agent \
+        software-properties-common \
+        && add-apt-repository "deb [arch=amd64] http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ cuda-repo-ubuntu1804_10.2.89-1_amd64.deb" \
+        && add-apt-repository "deb [arch=amd64] http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/ ml-repo-ubuntu1804_1.0.0-1_amd64.deb" \
+        && apt-get update \
+        && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+            ca-certificates \
+            curl \
+            gnupg-agent \
+            software-properties-common \
+            cuda-repo-ubuntu1804_10.2.89-1_amd64.deb \
+            cuda_10.2.89-devel-ubuntu1804-1_amd64.deb \
+            ml-repo-ubuntu1804_1.0.0-1_amd64.deb \
+        && rm -rf /var/lib/apt/lists/*
+
+# Set the environment variables for Ollama and llama.cpp
+ENV OLLAMA_HOME=/usr/local/share/ollama
+ENV PATH=$PATH:$OLLAMA_HOME/bin
+
+# Install necessary Python packages
+RUN pip install fastapi docker-compose requests uvicorn
+
+# Copy project files to the container
+COPY . /app
+
+# Set up virtual environment
+RUN python3 -m venv venv && source venv/bin/activate
+    pip install -r requirements.txt
+
+# Run Ollama with CUDA acceleration if available
+CMD ["bash", "scripts/run-ollama-cuda.sh"]
+``` 
+
+This updated Dockerfile installs the NVIDIA Container Toolkit, sets up environment variables for both Ollama and llama.cpp, installs necessary Python packages, creates a virtual environment, and runs an initialization script to start Ollama with CUDA acceleration if available.
+7. Create a new file named `scripts/run-ollama-cuda.sh` in your project directory:
+
+```
+#!/bin/bash
+
+# Check if NVIDIA driver is installed
+if ! lshw -class device | grep -q 'display'; then
+  echo "NVIDIA driver not found, exiting..."
+  exit 1
+fi
+
+# Ensure CUDA and cuDNN are installed and available for Ollama
+echo "Checking CUDA and cuDNN availability..."
+if ! cuda-get-pkgversion &>/dev/null; then
+  echo "CUDA not found, installing..."
+  if [ -d "/usr/local/cuda" ]; then
+    echo "CUDA is already installed, skipping installation."
+  else
+    curl -s https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-repo-ubuntu1804_10.2.89-1_amd64.deb | sudo apt-key add -
+    echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda-stable.list
+    sudo apt-get update && sudo apt-get install -y --no-install-recommends cuda-driver cuda-cudart-dev
+  fi
+
+  echo "Checking cuDNN availability..."
+  if [ ! -d "/usr/local/cuda/include/cuDNN.h" ]; then
+    echo "cuDNN not found, installing..."
+    curl -s https://developer.nvidia.com/compute/cuDNN-v7.6-ubuntu1804-x86_64.tgz | sudo tar -C /usr/local/cuda/lib64/ -xz
+  fi
+
+  if [ ! -d "/usr/local/cuda/include/cudnn.h" ]; then
+    echo "cuDNN headers not found, installing..."
+    curl -s https://developer.nvidia.com/compute/cuDNN-v7.6-ubuntu1804-x86_64.tgz | sudo tar -C /usr/local/cuda/include/ -xz
+  fi
+
+  echo "Setting up CUDA and cuDNN environment variables..."
+  export CUDA_HOME=/usr/local/cuda
+  export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+  export PATH=$CUDA_HOME/bin:$PATH
+  export CUDNN_INCLUDE_DIR=/usr/local/cuda/include/
+  export CUDNN_LIB=/usr/local/cuda/lib64/
+
+fi
+
+echo "Starting Ollama..."
+exec "$OLLAMA_HOME" /etc/ollama/config.yaml --cuda-path=/usr/local/cuda
+```
+
+This initialization script checks if the NVIDIA driver is installed and then installs CUDA and cuDNN libraries if needed. It also sets up necessary environment variables for CUDA acceleration.
+
+8. Create a new file named `scripts/run-llama.sh` in your project directory:
+
+```bash
+#!/bin/bash
+
+# Ensure CUDA and cuDNN are installed and available for llama.cpp
+echo "Checking CUDA and cuDNN availability..."
+if [ ! -d "/usr/local/cuda" ]; then
+  echo "CUDA not found, installing..."
+  if [ -d "/usr/local/cuda" ]; then
+    echo "CUDA is already installed, skipping installation."
+  else
+    curl -s https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-repo-ubuntu1804_10.2.89-1_amd64.deb | sudo apt-key add -
+    echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda-stable.list
+    sudo apt-get update && sudo apt-get install -y --no-install-recommends cuda-driver cuda-cudart-dev
+  fi
+
+  echo "Checking cuDNN availability..."
+  if [ ! -d "/usr/local/cuda/include/cuDNN.h" ]; then
+    echo "cuDNN not found, installing..."
+    curl -s https://developer.nvidia.com/compute/cuDNN-v7.6-ubuntu1804-x86_64.tgz | sudo tar -C /usr/local/cuda/lib64/ -xz
+  fi
+
+  if [ ! -d "/usr/local/cuda/include/cudnn.h" ]; then
+    echo "cuDNN headers not found, installing..."
+    curl -s https://developer.nvidia.com/compute/cuDNN-v7.6-ubuntu1804-x86_64.tgz | sudo tar -C /usr/local/cuda/include/ -xz
+  fi
+
+  echo "Setting up CUDA and cuDNN environment variables..."
+  export CUDA_HOME=/usr/local/cuda
+  export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+  export PATH=$CUDA_HOME/bin:$PATH
+  export CUDNN_INCLUDE_DIR=/usr/local/cuda/include/
+  export CUDNN_LIB=/usr/local/cuda/lib64/
+
+fi
+
+echo "Starting llama.cpp..."
+exec "$OLLAMA_HOME"/bin/llama-cli --cuda-path=/usr/local/cuda --port=$OLLAMA_PORT --model-type=clm --model-dir=./models/my_model_directory
+``` 
+
+This initialization script checks if the NVIDIA driver is installed and then installs CUDA and cuDNN libraries if needed. It also sets up necessary environment variables for CUDA acceleration.
+
+9. Modify your `requirements.txt` file to include the Ollama package:
+
+```
+fastapi
+docker-compose
+requests
+uvicorn
+
+# Install Ollama package (only required once)
+pip install ollama --user
+
+# Install llama.cpp package
+curl https://huggingface.co/lm-sandbox/llama-cpp-python/resolve/main/setup.py | python3 -
+``` 
+
+Now your project should be ready to run with both Ollama and llama.cpp as language models, using the NVIDIA Container Toolkit for GPU acceleration.
+
+10. Create a new file named `docker-compose.yml` in your project directory:
+
+```
+version: '3'
+
+services:
+  fastapi:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_PORT: "7429"
+
+  llama_cli:
+    image: llamacpp/llama-cli:latest
+    environment:
+      PORT: "7431"
+```
+
+This `docker-compose.yml` file defines two services, one for the FastAPI server and another for the llama.cpp CLI. It maps port 8000 of the host to port 8000 of the container and sets the OLLAMA_PORT environment variable for FastAPI.
+
+11. Run your project with Docker Compose:
+
+```bash
+docker-compose up
+
+This will start both the FastAPI server and the llama.cpp CLI in separate containers, allowing them to communicate over localhost:7430 (the default port forwarded by Docker).
+
+Please note that you may need to adjust the paths and configurations based on your specific project requirements. Also, keep in mind that using GPU acceleration for large language models like llama.cpp can consume a significant amount of resources. Make sure you have enough system memory and GPU capacity before enabling this feature.
+```
