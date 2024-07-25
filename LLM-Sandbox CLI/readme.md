@@ -1,5 +1,32 @@
 ## LLM-Sandbox CLI
 
+```mermaid
+graph TD
+    A[Host Machine] -->|Install Docker| B[Docker Engine]
+    B -->|Create Dockerfile| C[Build lm-docker Image]
+    B -->|Run lm-docker Container| D[lm_container]
+    D -->|SSH Access| E[SSH Server]
+    E -->|Execute Commands| F[Ubuntu Bash Shell]
+    A -->|Run LM Studio| G[LM Studio]
+    G -->|API Requests| H[Local Server]
+    H -->|Process Requests| I[Language Model]
+    I -->|Return Response| H
+    H -->|Forward Commands| E
+    E -->|Return Command Output| H
+    H -->|Return Final Response| G
+
+    subgraph Hardware
+        J[Ubuntu 22.04 jammy]
+        K[Kernel: x86_64 Linux 6.5.0-44-generic]
+        L[CPU: AMD Ryzen 9 5950X 16-Core]
+        M[GPU: NVIDIA GeForce RTX 3060, NVIDIA GeForce GTX 1060 6GB]
+        N[RAM: 128GB]
+        O[Disk: 12TB]
+    end
+    A -->|Use Hardware| J & K & L & M & N & O
+```
+
+
 To grant a local small 'quantized' language model running on jan.ai, lm-studio, or llama service access to a virtual machine (VM) with Ubuntu OS and a bash command line environment, follow these steps:
 
 ### Step 1: Set Up the Virtual Machine
