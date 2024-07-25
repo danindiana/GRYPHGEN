@@ -7,11 +7,119 @@ graph TD
     Docker -->|Run LLMs| LLM
     Docker -->|Isolated Environment| Bash
 
+    LLM -->|Ollama Integration| Ollama[Ollama]
+    LLM -->|llama.cpp Integration| llama_cpp[llama.cpp]
+
+    subgraph Hardware
+        Host[Host Machine]
+        Host -->|Install Docker| DockerEngine[Docker Engine]
+        DockerEngine -->|Create Dockerfile| lmDocker[Build lm-docker Image]
+        DockerEngine -->|Run lm-docker Container| lmContainer[lm_container]
+        lmContainer -->|SSH Access| SSH[SSH Server]
+        SSH -->|Execute Commands| UbuntuBash[Ubuntu Bash Shell]
+        Host -->|Run LM Studio| LMStudio[LM Studio]
+        LMStudio -->|API Requests| LocalServer[Local Server]
+        LocalServer -->|Process Requests| LanguageModel[Language Model]
+        LanguageModel -->|Return Response| LocalServer
+        LocalServer -->|Forward Commands| SSH
+        SSH -->|Return Command Output| LocalServer
+        LocalServer -->|Return Final Response| LMStudio
+    end
+
+    classDef default fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef llm fill:#bbf,stroke:#f66,stroke-width:2px,stroke-dasharray: 5, 5;
+    class FastAPI,Docker default;
+    class LLM,Ollama,llama_cpp llm;
+```
+
+Below is the refactored Mermaid diagram for the 'lm-sandbox' project, integrating the use of FastAPI to expose local language models (LLMs) and providing access to a Bash CLI-type environment, with the inclusion of both Ollama and llama.cpp:
+
+```mermaid
+graph TD
+    Client[Client] -->|HTTP Requests| FastAPI[FastAPI Server]
+    FastAPI -->|Interact with LLMs| LLM[Language Models]
+    FastAPI -->|Execute Bash Commands| Bash[Bash CLI Environment]
+    FastAPI -->|Docker Interaction| Docker[Docker Containers]
+    Docker -->|Run LLMs| LLM
+    Docker -->|Isolated Environment| Bash
+
+    LLM -->|Ollama Integration| Ollama[Ollama]
+    LLM -->|llama.cpp Integration| llama_cpp[llama.cpp]
+
+    subgraph Hardware
+        Host[Host Machine]
+        Host -->|Install Docker| DockerEngine[Docker Engine]
+        DockerEngine -->|Create Dockerfile| lmDocker[Build lm-docker Image]
+        DockerEngine -->|Run lm-docker Container| lmContainer[lm_container]
+        lmContainer -->|SSH Access| SSH[SSH Server]
+        SSH -->|Execute Commands| UbuntuBash[Ubuntu Bash Shell]
+        Host -->|Run LM Studio| LMStudio[LM Studio]
+        LMStudio -->|API Requests| LocalServer[Local Server]
+        LocalServer -->|Process Requests| LanguageModel[Language Model]
+        LanguageModel -->|Return Response| LocalServer
+        LocalServer -->|Forward Commands| SSH
+        SSH -->|Return Command Output| LocalServer
+        LocalServer -->|Return Final Response| LMStudio
+    end
+
+    classDef default fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef llm fill:#bbf,stroke:#f66,stroke-width:2px,stroke-dasharray: 5, 5;
+    class FastAPI,Docker default;
+    class LLM,Ollama,llama_cpp llm;
+```
+
+### Explanation
+
+1. **Client**: Represents users or systems interacting with the 'lm-sandbox' project by sending HTTP requests.
+2. **FastAPI Server**: Acts as the central node that processes HTTP requests from clients, interacting with language models and executing Bash commands.
+3. **Language Models (LLM)**: Core components for processing natural language data. Includes integration with both Ollama and llama.cpp for model execution.
+4. **Bash CLI Environment**: Represents the capability to execute Bash commands on the Ubuntu VM, using the subprocess module.
+5. **Docker Containers**: Used to encapsulate and manage the environment for running the FastAPI server, LLMs, and Bash CLI environment.
+6. **Ollama**: Integration with the Ollama language model framework.
+7. **llama.cpp**: Integration with the llama.cpp language model framework.
+8. **Hardware**: Details of the host machine running Ubuntu 22.04 with specified hardware, Docker Engine, and LM Studio.
+
+### Steps to Visualize the Diagram
+
+1. **Copy the Mermaid code** above.
+2. **Use a Mermaid Live Editor** like [Mermaid Live Editor](https://mermaid-js.github.io/mermaid-live-editor/) to visualize the diagram.
+3. **Paste the code** into the editor to see the rendered diagram.
+
+This diagram provides a comprehensive overview of the 'lm-sandbox' project architecture, highlighting the use of FastAPI for API management, integration of local language models (Ollama and llama.cpp), and Docker for environment management.
+
+
+To refactor the 'lm-sandbox' project overview into a Mermaid diagram that integrates the new information about using FastAPI to expose local language models (LLMs) to a virtual machine (VM) running Ubuntu OS and providing access to a Bash CLI-type environment, we'll structure the diagram as follows:
+
+1. **Client Interaction**: Show how clients interact with the system through the FastAPI server.
+2. **FastAPI Server**: Highlight the FastAPI server as the central node that facilitates all operations, including interacting with LLMs and executing Bash commands.
+3. **Language Models**: Represent the local language models and their interaction with the FastAPI server.
+4. **Bash CLI Environment**: Illustrate the execution of Bash commands through the FastAPI server using the subprocess module.
+5. **Docker Containers**: If applicable, show how Docker containers are used to encapsulate the environment for running LLMs or the FastAPI server itself.
+
+Here's how the refactored Mermaid diagram might look:
+
+```mermaid
+graph TD
+    Client[Client] -->|HTTP Requests| FastAPI[FastAPI Server]
+    FastAPI -->|Interact with LLMs| LLM[Language Models]
+    FastAPI -->|Execute Bash Commands| Bash[Bash CLI Environment]
+    FastAPI -->|Docker Interaction| Docker[Docker Containers]
+    Docker -->|Run LLMs| LLM
+    Docker -->|Isolated Environment| Bash
+
     classDef default fill:#f9f,stroke:#333,stroke-width:2px;
     classDef llm fill:#bbf,stroke:#f66,stroke-width:2px,stroke-dasharray: 5, 5;
     class FastAPI,Docker default;
     class LLM llm;
 ```
+
+### Explanation of the Diagram:
+
+- **Client**: Represents users or systems that interact with the 'lm-sandbox' project by sending HTTP requests.
+- **FastAPI Server**: Acts as the central node that receives HTTP requests from clients. It's responsible for processing these requests, which include interacting with language models for natural language processing tasks or executing specific Bash commands within the Ubuntu environment.
+- **Language Models (LLM)**: These are the core components that perform the actual processing of natural language data. The FastAPI server interacts with these models based on the requests it receives.
+- **Bash CLI Environment**: This node represents the capability of the FastAPI server to execute Bash commands on the Ubuntu VM, leveraging the subprocess module for tasks that require direct interaction with the operating system or the command line.
+- **Docker Containers**: Illustrates the use of Docker containers to encapsulate and manage the execution environment for both the FastAPI server and the language models. This ensures consistency, isolation, and scalability.
 
 Based on the provided information, the 'lm-sandbox' project appears to be a comprehensive environment designed for experimenting with and deploying various large language models (LLMs) such as Ollama and llama.cpp. The project leverages Docker for containerization, ensuring a consistent and isolated environment for each component of the system. Here's a detailed breakdown of the project components and their interactions within the existing hardware/software stack:
 
