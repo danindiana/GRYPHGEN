@@ -1,3 +1,43 @@
+```mermaid
+graph TD
+    A[Host Machine] -->|Install Docker| B[Docker Engine]
+    B -->|Create Dockerfile| C[Build lm-docker Image]
+    B -->|Run lm-docker Container| D[lm_container]
+    D -->|SSH Access| E[SSH Server]
+    E -->|Execute Commands| F[Ubuntu Bash Shell]
+    A -->|Run LM Studio| G[LM Studio]
+    G -->|API Requests| H[Local Server]
+    H -->|Process Requests| I[Language Model]
+    I -->|Return Response| H
+    H -->|Forward Commands| E
+    E -->|Return Command Output| H
+    H -->|Return Final Response| G
+
+    A -->|Install Ollama| J[Ollama]
+    J -->|Run Inference| K[Ollama Local Server]
+    K -->|Process Requests| L[Ollama Language Model]
+    L -->|Return Response| K
+    K -->|Forward Commands| E
+    E -->|Execute Commands| F
+
+    A -->|Install llama.cpp| M[llama.cpp]
+    M -->|Run Inference| N[llama.cpp Execution]
+    N -->|Process Requests| O[llama.cpp Language Model]
+    O -->|Return Response| N
+    N -->|Forward Commands| E
+    E -->|Execute Commands| F
+
+    subgraph Hardware
+        P[Ubuntu 22.04 jammy]
+        Q[Kernel: x86_64 Linux 6.5.0-44-generic]
+        R[CPU: AMD Ryzen 9 5950X 16-Core]
+        S[GPU: NVIDIA GeForce RTX 3060, NVIDIA GeForce GTX 1060 6GB]
+        T[RAM: 128GB]
+        U[Disk: 12TB]
+    end
+    A -->|Use Hardware| P & Q & R & S & T & U
+```
+
 There are several libraries, command-line interfaces (CLI), and web servers available for running large language models (LLMs) locally or in cloud environments. Here are some notable options:
 
 ### Libraries
