@@ -18,6 +18,19 @@ subgraph System
     I[Bash Shell] -->|Returns output to| User
 end
 ```
+Explanation:
+
+User Input: The user enters a command in natural language within the terminal.
+ShellGenie Function: The shellgenie bash function is triggered.
+LLM Invocation:
+If Ollama is chosen, the function sends the input to the Ollama server for processing.
+If llama.cpp is used, it directly interacts with the locally deployed Llama3 model.
+LLM Processing: Llama3 processes the natural language input and generates a corresponding bash command.
+Safety Check: The generated command is checked for potentially dangerous operations.
+Command Execution (If Safe): If the command is deemed safe, it's executed in the bash shell.
+Warning Message (If Unsafe): If the command is flagged as unsafe, a warning message is displayed to the user.
+Output: The output from the bash shell (if the command was executed) is returned to the user.
+
 
 1. Executive Summary
 
