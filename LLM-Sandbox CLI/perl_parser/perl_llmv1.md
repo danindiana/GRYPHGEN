@@ -1,3 +1,41 @@
+Here's a Mermaid diagram representing the system overview of your Language Model (LLM) interaction on Ubuntu 22.04 with Ollama running using CUDA/nvidia-smi:
+
+```mermaid
+graph TD;
+    A[User] --> B[Bash CLI];
+    B --> C{Execute Perl Script};
+    C --> D[main.pl: LLM Interaction & Tool Execution];
+    D -->|Stream Responses| E[LLM Ollama];
+    E -->|Return Chunks| D;
+    D --> F{Check for Tool Requests};
+    F -->|No| G[Print Response Chunk];
+    F -->|Yes| H[Execute Relevant Tool];
+    H --> I[Obtain Execution Result];
+    H --> J[Push Assistant Message & User Input with Result];
+    I --> K{Update LLM History};
+    K --> D;
+    G --> L[Push Assistant Message];
+    G --> M{Update LLM History};
+    M --> D;
+```
+
+Here's a brief description of the diagram:
+
+1. **User** inputs queries through the **Bash CLI**.
+2. The **Perl Script (main.pl)** is executed, handling user input and interacting with the LLM.
+3. The script streams responses from the **LLM (Ollama)** and checks for tool requests in the LLM's output.
+4. If a tool request is found, the relevant tool is executed, and its result is obtained.
+5. The script updates the LLM history with appropriate messages (assistant or user input with result) based on the presence of a tool request.
+6. If no tool request is found, the response chunk is printed, and the assistant message is pushed to update the LLM history.
+
+This diagram provides an overview of the system, highlighting the interaction between the user, the Perl script, and the LLM.<|im_end|>
+
+
+
+
+
+
+
 Here's how you can use Perl instead of Python to interact with the LLM and execute code:
 
 1. **Install necessary libraries**: You'll need `Ollama::Client` for interacting with Ollama and `Inline::Perl5` for executing Perl code. Install them using cpan:
@@ -935,3 +973,212 @@ Expanding the capabilities of your Language Model (LLM) interaction by adding va
 - **Dependencies**: Ensure all dependencies are correctly installed and compatible with your Perl version. For example, you might need additional Perl modules to support some tools (e.g., for HTTP requests or database interactions).
 
 By adding these tools, you can create a versatile environment where the LLM can perform a wide range of tasks, from simple calculations to complex interactions with external systems.
+
+
+To add more tools to your Perl script for interacting with a Language Model (LLM), follow these general steps. I'll provide an example using the `Python` tool:
+
+1. **Update the `Modelfile`**:
+   - Inform the model about the new tool and its usage syntax.
+
+```plaintext
+# Modelfile
+model /path/to/your/model.gguf
+temperature 0.7
+max_tokens 512
+
+You are an assistant with access to several tools to help you answer user queries.
+
+Tools:
+- `Perl`: Execute Perl code. Wrap the code in triple backticks (```) with the language set as 'Perl'.
+    - Example: ```Perl\nprint "Hello, World!";\n```
+
+  ... (other existing tools)
+
+- `Python`: Execute Python code snippets. Wrap the code in triple backticks (```) with the language set as 'Python'.
+    - Example: ```Python\nprint("Hello, World!")\n```
+  ...
+  # Add more tools as needed
+```
+
+2. **Update the Perl Script (`main.pl`)**:
+   - Recognize and execute the new tool based on its syntax in the LLM's response.
+   - Update the `execute_tool` subroutine to support the new tool.
+
+```perl
+sub execute_tool {
+    my ($tool, $code) = @_;
+
+    if ($tool eq 'Perl') {
+        return eval_perl($code);
+    }
+    elsif ($tool eq 'Python') {
+        # Execute Python code using Inline::Python5's eval_python function
+        return eval_python($code);
+    }
+    ...
+}
+```
+
+For the `Python` tool, I've used the `Inline::Python5` module to execute Python code. Make sure you have this module installed:
+
+```bash
+cpan install Inline::Python5
+```
+
+3. **Create a Subroutine for the New Tool**:
+   - Add a subroutine specific to the new tool's functionality, if needed.
+
+For the `Python` tool, since we're using `Inline::Python5`, no additional subroutine is required beyond what's already provided by the module itself (`eval_python`).
+
+4. **Test the New Tool**:
+   - Interact with the LLM and provide a prompt that would trigger the new tool.
+   - Verify that the LLM responds with the correct syntax for the new tool, and check if the Perl script executes the code as expected.
+
+Here's an example interaction using the newly added `Python` tool:
+
+```
+> What is 2 + 2 in Python?
+{
+  "role": "user",
+  "content": "What is 2 + 2 in Python?"
+}
+
+{
+  "role": "assistant",
+  "content": "```Python\nprint(2 + 2)\n```"
+}
+
+{
+  "role": "user",
+  "content": "Executed Result: 4"
+}
+```
+
+In this example, the LLM responds with a Python code snippet to perform the addition operation. The Perl script recognizes this as a request for the "Python" tool and executes the code, returning the result.
+
+Your approach to adding a new tool (Python) to the Perl script for interacting with a Language Model (LLM) is well-structured and comprehensive. Here’s a detailed breakdown of the steps and some additional considerations to ensure a robust and versatile environment:
+
+### Detailed Steps
+
+1. **Update the `Modelfile`**:
+   - Inform the model about the new tool and its usage syntax.
+
+   ```plaintext
+   # Modelfile
+   model /path/to/your/model.gguf
+   temperature 0.7
+   max_tokens 512
+
+   You are an assistant with access to several tools to help you answer user queries.
+
+   Tools:
+   - `Perl`: Execute Perl code. Wrap the code in triple backticks (```) with the language set as 'Perl'.
+       - Example: ```Perl\nprint "Hello, World!";\n```
+   - `Python`: Execute Python code snippets. Wrap the code in triple backticks (```) with the language set as 'Python'.
+       - Example: ```Python\nprint("Hello, World!")\n```
+   ```
+
+2. **Update the Perl Script (`main.pl`)**:
+   - Recognize and execute the new tool based on its syntax in the LLM’s response.
+   - Update the `execute_tool` subroutine to support the new tool.
+
+   ```perl
+   sub execute_tool {
+       my ($tool, $code) = @_;
+
+       if ($tool eq 'Perl') {
+           return eval_perl($code);
+       }
+       elsif ($tool eq 'Python') {
+           # Execute Python code using Inline::Python5's eval_python function
+           return eval_python($code);
+       }
+       ...
+   }
+   ```
+
+3. **Install Necessary Modules**:
+   - Ensure you have the `Inline::Python5` module installed.
+
+   ```bash
+   cpan install Inline::Python5
+   ```
+
+4. **Test the New Tool**:
+   - Interact with the LLM and provide a prompt that would trigger the new tool.
+   - Verify that the LLM responds with the correct syntax for the new tool, and check if the Perl script executes the code as expected.
+
+   ```
+   > What is 2 + 2 in Python?
+   {
+     "role": "user",
+     "content": "What is 2 + 2 in Python?"
+   }
+
+   {
+     "role": "assistant",
+     "content": "```Python\nprint(2 + 2)\n```"
+   }
+
+   {
+     "role": "user",
+     "content": "Executed Result: 4"
+   }
+   ```
+
+### Additional Considerations
+
+- **Error Handling**: Ensure robust error handling for each tool, especially when executing arbitrary code.
+- **Security**: Be cautious with executing code from untrusted sources. Consider sandboxing or validating the code before execution.
+- **Performance**: Monitor the performance of the script, especially if dealing with large responses or complex code executions.
+- **Dependencies**: Ensure all dependencies are correctly installed and compatible with your Perl version.
+
+### Example of Adding Another Tool (SQL)
+
+To add another tool, such as executing SQL queries, you can follow a similar structure:
+
+1. **Update the `Modelfile`**:
+   ```plaintext
+   Tools:
+   ...
+   - `SQL`: Execute SQL queries against a database. Wrap the query in triple backticks with the language set as 'SQL'.
+       - Example: ```SQL\nSELECT * FROM users WHERE age > 21;\n```
+   ```
+
+2. **Update the Perl Script (`main.pl`)**:
+   ```perl
+   sub execute_tool {
+       my ($tool, $code) = @_;
+
+       if ($tool eq 'Perl') {
+           return eval_perl($code);
+       }
+       elsif ($tool eq 'Python') {
+           return eval_python($code);
+       }
+       elsif ($tool eq 'SQL') {
+           return execute_sql_query($code);
+       }
+       ...
+   }
+
+   sub execute_sql_query {
+       my ($query) = @_;
+       # Implement SQL query execution logic here
+       # Example: use DBI to connect to a database and execute the query
+       return "SQL query result";
+   }
+   ```
+
+3. **Install Necessary Modules**:
+   - Ensure you have the `DBI` module installed for database interactions.
+
+   ```bash
+   cpan install DBI
+   ```
+
+4. **Test the New Tool**:
+   - Interact with the LLM and provide a prompt that would trigger the new tool.
+   - Verify that the LLM responds with the correct syntax for the new tool, and check if the Perl script executes the code as expected.
+
+By following these steps and considering the additional points, you can create a versatile and robust environment where the LLM can utilize various functionalities beyond just executing Perl code.
