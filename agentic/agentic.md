@@ -18,8 +18,8 @@ graph TD
     G -->|Inputs: Codebase| M[Documentation Files]
 
     %% Neural Network / Abstraction Layers
-    B --> N[Transformer Model (e.g., Codex)]
-    C --> O[Automated Testing Framework (e.g., PyTest + ML)]
+    B --> N[Transformer Model e.g., Codex]
+    C --> O[Automated Testing Framework e.g., PyTest + ML]
     D --> P[Reinforcement Learning for Project Management]
     E --> Q[Meta-Learning for Self-Improvement]
     F --> R[Graph Neural Network for Collaboration]
