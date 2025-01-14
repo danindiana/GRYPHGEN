@@ -457,3 +457,117 @@ It looks like **Nginx** is now using port `11435` as well. This means there’s 
 ---
 
 Let me know if you encounter further issues!
+
+To debug the connection and ensure that Ollama is accessible using `curl` from `smduck`, follow these steps:
+
+---
+
+### 1. **Verify Ollama is Running**
+   - Ensure that Ollama is running on `worlock` (the machine where Ollama is hosted).
+   - From the logs you provided, it seems Ollama is running and listening on `http://0.0.0.0:11434`. This means it should accept connections from any IP address on port `11434`.
+
+---
+
+### 2. **Check Firewall Rules**
+   - Ensure that port `11434` is open on `worlock`'s firewall. If you're using `ufw` (Uncomplicated Firewall), you can check and allow the port with the following commands:
+     ```bash
+     sudo ufw status
+     sudo ufw allow 11434/tcp
+     sudo ufw reload
+     ```
+   - If you're using a cloud provider (e.g., AWS, GCP, Azure), ensure that the security group or firewall rules allow inbound traffic on port `11434`.
+
+---
+
+### 3. **Test Local Access**
+   - From `worlock`, test if Ollama is accessible locally using `curl`:
+     ```bash
+     curl http://localhost:11434
+     ```
+   - If Ollama is running correctly, you should see a response like:
+     ```json
+     {"status":"Ollama is running"}
+     ```
+   - If this fails, there might be an issue with Ollama's configuration or service. Restart Ollama and check the logs for errors.
+
+---
+
+### 4. **Test Remote Access**
+   - From `smduck`, try to access Ollama on `worlock` using `curl`. Replace `<worlock_ip>` with the actual IP address of `worlock`:
+     ```bash
+     curl http://<worlock_ip>:11434
+     ```
+   - If this fails, it could be due to:
+     - **Network issues**: Ensure `smduck` can reach `worlock` over the network. Test connectivity using `ping`:
+       ```bash
+       ping <worlock_ip>
+       ```
+     - **Firewall issues**: Double-check the firewall rules on `worlock` (step 2).
+     - **Binding issues**: Ollama might not be bound to the correct network interface. By default, `0.0.0.0` should allow connections from any IP, but you can explicitly bind it to `worlock`'s IP address:
+       ```bash
+       export OLLAMA_HOST=http://<worlock_ip>:11434
+       ollama serve
+       ```
+
+---
+
+### 5. **Check Ollama Configuration**
+   - Ensure that `OLLAMA_HOST` is set correctly on `worlock`. You can verify this by running:
+     ```bash
+     echo $OLLAMA_HOST
+     ```
+   - If it’s not set to `http://0.0.0.0:11434` or `http://<worlock_ip>:11434`, update it:
+     ```bash
+     export OLLAMA_HOST=http://0.0.0.0:11434
+     ```
+
+---
+
+### 6. **Test with a Model**
+   - Once you confirm that Ollama is accessible, test it with a model. For example, from `smduck`, run:
+     ```bash
+     curl http://<worlock_ip>:11434/api/generate -d '{
+       "model": "llama2",
+       "prompt": "Why is the sky blue?"
+     }'
+     ```
+   - If successful, you should see a stream of responses.
+
+---
+
+### 7. **Debugging Tips**
+   - **Check Ollama Logs**: If Ollama is not responding, check the logs for errors. Run `ollama serve` in the foreground to see real-time logs.
+   - **Use `netstat`**: Verify that Ollama is listening on the correct port:
+     ```bash
+     sudo netstat -tuln | grep 11434
+     ```
+     You should see something like:
+     ```
+     tcp        0      0 0.0.0.0:11434          0.0.0.0:*               LISTEN
+     ```
+   - **Check Network Configuration**: Ensure that `worlock` and `smduck` are on the same network or can route traffic to each other.
+
+---
+
+### 8. **Common Issues and Fixes**
+   - **Connection Refused**: This usually means Ollama is not running, or the port is blocked by a firewall.
+   - **No Response**: Ollama might be running but not bound to the correct IP address. Double-check `OLLAMA_HOST`.
+   - **Timeout**: This indicates a network issue. Ensure there’s no network partition between `smduck` and `worlock`.
+
+---
+
+### Example Debugging Workflow
+1. On `worlock`:
+   ```bash
+   export OLLAMA_HOST=http://0.0.0.0:11434
+   ollama serve
+   ```
+2. On `smduck`:
+   ```bash
+   curl http://<worlock_ip>:11434
+   ```
+3. If the connection fails, check the firewall and network configuration on `worlock`.
+
+---
+
+By following these steps, you should be able to debug and resolve the connection issue, making Ollama accessible from `smduck`. Let me know if you encounter specific errors!
