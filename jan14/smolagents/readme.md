@@ -1988,3 +1988,153 @@ A lightweight framework where LLMs reason and tools act.
 Simple registration of Python functions as tools using the @tool decorator.
 A centralized agent that interprets tasks, invokes tools, and returns results.
 For local models like Ollama, smolagents seamlessly supports integration, enabling you to build powerful, privacy-preserving agents that can execute complex workflows efficiently.
+
+OK so I'm running a local model via ollama and it's REST API is exposed. How does that connect tot he smolagents library and how do I setup "tools" for it's use and invocation? Also where does it execute tool use? In a container, the default directory, a VM???
+
+ChatGPT said:
+ChatGPT
+When running a local model via Ollama with its REST API exposed, smolagents connects to the model by treating it as a language model endpoint and integrates tools as Python functions. Here's how it all fits together:
+
+1. Connecting Ollama to smolagents
+Ollama exposes a REST API for interacting with the local model, which smolagents can leverage using the LiteLLMModel or a custom wrapper.
+
+Steps to Connect Ollama to smolagents:
+Start Ollama’s Server:
+
+Ensure Ollama is running locally and exposing its API.
+bash
+Copy code
+ollama serve
+By default, the API is available at http://localhost:11434/api.
+Define the Model in smolagents:
+
+Use LiteLLMModel to connect smolagents to the Ollama endpoint.
+Specify the model ID and API details.
+Example:
+
+python
+Copy code
+from smolagents import LiteLLMModel
+
+model = LiteLLMModel(
+    model_id="ollama/llama2-13b",  # The model served by Ollama
+    api_endpoint="http://localhost:11434/api"  # Ollama's API endpoint
+)
+Initialize the Agent:
+
+Create a CodeAgent and link it to the local Ollama model.
+python
+Copy code
+from smolagents import CodeAgent
+
+agent = CodeAgent(model=model, tools=[], add_base_tools=True)
+2. Setting Up Tools for smolagents
+What Are Tools?
+Tools are Python functions that the agent can invoke during task execution. They interact with the environment (e.g., read files, scan networks, fetch APIs).
+Steps to Define and Use Tools:
+Define a Tool:
+
+Use the @tool decorator to register a Python function as a tool.
+Example:
+python
+Copy code
+from smolagents import tool
+
+@tool
+def say_hello(name: str) -> str:
+    """Returns a greeting for the given name."""
+    return f"Hello, {name}!"
+Add Tools to the Agent:
+
+Pass the tool(s) to the agent during initialization.
+python
+Copy code
+agent = CodeAgent(model=model, tools=[say_hello], add_base_tools=True)
+Invoke Tools in a Task:
+
+Write a task that uses the tool and run it via the agent.
+python
+Copy code
+result = agent.run("Use the say_hello tool to greet John.")
+print(result)
+3. How Tool Execution Works
+Where Are Tools Executed?
+Tools are Python functions executed:
+Directly on the local machine.
+Within the same Python runtime where smolagents is running.
+No Containers, VMs, or Special Isolation:
+By default, tools execute in the default directory of the Python process.
+If tools require specific environments, it’s up to you to set up containers, VMs, or sandboxing (not natively provided by smolagents).
+Customizing Execution Context:
+Use Docker or VMs for Isolation:
+Wrap tools to execute in a containerized or virtualized environment.
+Example with Docker:
+python
+Copy code
+import subprocess
+from smolagents import tool
+
+@tool
+def run_in_docker(command: str) -> str:
+    """Runs a command inside a Docker container."""
+    result = subprocess.run(
+        ["docker", "run", "--rm", "ubuntu", "bash", "-c", command],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout
+4. Example Workflow: Connecting Ollama and Tools
+Use Case: "Summarize a network scan using a local model and tools."
+Define the Tools:
+
+network_scanner: Scans the network for active devices.
+summarize_results: Summarizes the results using the local model.
+python
+Copy code
+from smolagents import tool
+
+@tool
+def network_scanner(ip_range: str) -> list:
+    """Scans the network for active devices."""
+    from scapy.all import ARP, Ether, srp
+    arp_request = ARP(pdst=ip_range)
+    broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+    result = srp(broadcast / arp_request, timeout=3, verbose=0)[0]
+    return [{"ip": recv.psrc, "mac": recv.hwsrc} for _, recv in result]
+
+@tool
+def summarize_results(devices: list) -> str:
+    """Summarizes the network scan results."""
+    if not devices:
+        return "No devices found."
+    return f"Found {len(devices)} devices on the network."
+Connect the Local Model:
+
+python
+Copy code
+from smolagents import LiteLLMModel, CodeAgent
+
+model = LiteLLMModel(
+    model_id="ollama/llama2-13b",
+    api_endpoint="http://localhost:11434/api"
+)
+
+agent = CodeAgent(model=model, tools=[network_scanner, summarize_results], add_base_tools=True)
+Run the Task:
+
+python
+Copy code
+task = """
+Scan the network 192.168.1.0/24 using the `network_scanner` tool.
+Summarize the results using the `summarize_results` tool.
+"""
+print(agent.run(task))
+5. Summary of Execution Workflow
+Local Model Integration:
+smolagents connects to Ollama's REST API as a lightweight LLM backend.
+Tool Execution:
+Tools execute as Python functions within the local Python runtime.
+Default execution is not isolated but can be customized using Docker, VMs, or external sandboxes.
+Task Orchestration:
+The agent (via the LLM) plans which tools to invoke, orchestrates their execution, and returns results.
+This setup provides a robust, modular framework for combining local LLM reasoning with actionable tools on your hardware. Let me know if you’d like help setting up a specific example!
