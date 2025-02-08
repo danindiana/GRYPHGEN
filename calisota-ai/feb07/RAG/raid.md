@@ -203,3 +203,44 @@ The AMD TRX40/X570 platform provides ample PCIe 4.0 lanes, but proper allocation
 - **Future Expansion**: If you need additional NVMe storage, consider adding a second ASUS Hyper M.2 card and allocating PCIe lanes accordingly.
 
 This setup should provide a highly performant and scalable solution for your RAG system, leveraging the full potential of your hardware while maintaining a balance between performance and redundancy.
+
+```mermaid
+graph TD
+    subgraph AMD_TRX40_X570[AMD TRX40/X570 Platform]
+        CPU[CPU] -->|PCIe 4.0 x16| GPU1[RTX 5090 GPU 1]
+        CPU -->|PCIe 4.0 x16| GPU2[RTX 5090 GPU 2]
+        CPU -->|PCIe 4.0 x16| NVMe_RAID[ASUS Hyper M.2 x16 Card]
+        CPU -->|PCIe 4.0 x4| OS_NVMe[OS NVMe Drive]
+        CPU -->|PCIe 4.0 x4| SATA_Controller[SATA Controller]
+    end
+
+    subgraph NVMe_RAID_Array[NVMe RAID 0 Array]
+        NVMe_RAID --> NVMe1[Samsung 990 PRO 4TB]
+        NVMe_RAID --> NVMe2[Samsung 990 PRO 4TB]
+        NVMe_RAID --> NVMe3[Samsung 990 PRO 4TB]
+        NVMe_RAID --> NVMe4[Samsung 990 PRO 4TB]
+    end
+
+    subgraph Backup_Cold_Storage[Backup & Cold Storage]
+        SATA_Controller --> HDD1[Spinning HDD 1]
+        SATA_Controller --> HDD2[Spinning HDD 2]
+        SATA_Controller --> HDD3[Spinning HDD 3]
+    end
+
+    subgraph Software_Stack[Software Stack]
+        OS[Ubuntu 22.04] --> FAISS[FAISS Vector Database]
+        OS --> LM[Language Models]
+        FAISS -->|Memory-Mapped| NVMe_RAID_Array
+        LM -->|Query| FAISS
+    end
+
+    subgraph Backup_Process[Backup Process]
+        NVMe_RAID_Array -->|rsync| Backup_Cold_Storage
+    end
+
+    style AMD_TRX40_X570 fill:#f9f,stroke:#333,stroke-width:4px
+    style NVMe_RAID_Array fill:#bbf,stroke:#333,stroke-width:2px
+    style Backup_Cold_Storage fill:#fbb,stroke:#333,stroke-width:2px
+    style Software_Stack fill:#bfb,stroke:#333,stroke-width:2px
+    style Backup_Process fill:#ffb,stroke:#333,stroke-width:2px
+```
