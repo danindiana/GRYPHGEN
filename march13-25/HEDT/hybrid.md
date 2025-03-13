@@ -69,6 +69,36 @@ graph LR
     style IC fill:#fff,stroke:#333,stroke-width:1px
 ```
 
+```mermaid
+graph TD
+  A[User Query] -->|Processed by| B[NVIDIA GPUs: LLM Inference]
+  B -->|Generates Response| C[LLM Output Unstructured Text]
+  
+  subgraph "Tenstorrent Cognitive Compute Modules"
+    C --> D[🔮 Future State Forecasting]
+    C --> E[🧠 Hypothesis Checking & Rejection]
+    C --> F[📊 Data Relevancy & Elaboration]
+    C --> G[🕸️ Multi-Dimensional Relation Mapping]
+    C --> H[🏛️ Hierarchy of Notions Creation]
+    
+    D -->|Predicted Next State| I[Refined Prompt Suggestions]
+    E -->|Detects Errors| J[Corrections & Logical Fixes]
+    F -->|Adds Context| K[Augmented Data for LLM]
+    G -->|Finds Hidden Links| L[Enhanced Semantic Relations]
+    H -->|Structures Knowledge| M[Organized Concept Hierarchy]
+  end
+
+  subgraph "LLM Refinement Loop"
+    I --> N[NVIDIA GPUs: Improved Inference]
+    J --> N
+    K --> N
+    L --> N
+    M --> N
+  end
+
+  N -->|Final Processed Response| O[User Receives Enhanced Output]
+```
+
 Explanation of the Diagram:
 
 User Interaction: The user sends a query to the Language Model inference running on the NVIDIA GPUs.
