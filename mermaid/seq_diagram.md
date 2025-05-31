@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2ec238a0-b5ed-4000-afbc-1b27cc77cd64" alt="ChatGPT Image" width="400"/>
+</p>
+
+
+```
 sequenceDiagram
     participant CG as CodeGenerator
     participant CA as CodeAnalyzer
