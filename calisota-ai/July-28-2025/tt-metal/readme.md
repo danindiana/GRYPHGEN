@@ -153,3 +153,9 @@ To map the paper's insights about dynamic cortical communication onto Tenstorren
 6. **Debug Interfaces**: Causal perturbation and monitoring.  
 
 This mapping transforms the brain's dynamic communication principles into a hardware-efficient implementation, leveraging `tt-metal`'s strengths in reconfigurable dataflow, temporal precision, and tensor operations to emulate context-dependent neural processing.
+
+
+Source: Dynamic causal communication channels between neocortical areas
+ View ORCID ProfileMitra Javadzadeh,  View ORCID ProfileSonja B. Hofer
+doi: https://doi.org/10.1101/2021.06.28.449892
+Now published in Neuron doi: 10.1016/j.neuron.2022.05.011
