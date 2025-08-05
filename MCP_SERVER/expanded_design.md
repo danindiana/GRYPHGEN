@@ -1,4 +1,136 @@
-User: Expand on the following: 
+```mermaid
+%%{init:{"theme":"base","themeVariables":{"primaryColor":"#e1f5fe","primaryTextColor":"#01579b","primaryBorderColor":"#01579b","lineColor":"#01579b","secondaryColor":"#fff3e0","tertiaryColor":"#e8f5e9"}}}%%
+
+graph TD
+    subgraph Clients
+        CLI[CLI / SDK]
+    end
+
+    subgraph Public_Facing
+        GW[API Gateway<br>FastAPI / Go-Gin]
+    end
+
+    subgraph Core_Services
+        Auth[Authn / Authz]
+        Router[Request Router]
+        Context[Context Store<br>Redis / PG]
+    end
+
+    subgraph Docs_System
+        Crawler[Docs Crawler & Indexer]
+        DocsDB[Docs DB]
+    end
+
+    subgraph Runtime_Area
+        subgraph Adapter_Ollama
+            OA[Ollama Adapter]
+            OR[Ollama Runtime]
+        end
+        subgraph Adapter_LlamaCpp
+            LA[LlamaCpp Adapter]
+            LR[Llama.cpp Runtime]
+        end
+        subgraph Adapter_Triton
+            TA[Triton Adapter]
+            TR[Triton Runtime]
+        end
+    end
+
+    subgraph Testing
+        Harness[Test Harness<br>Fuzzers + CI]
+    end
+
+    CLI -->|/mcp/v1/*| GW
+    GW --> Auth
+    GW -->|fetch| Crawler
+    Crawler -->|store| DocsDB
+    Auth --> Router
+    Router --> Context
+    Router --> OA
+    Router --> LA
+    Router --> TA
+
+    OA --> OR
+    LA --> LR
+    TA --> TR
+
+    OR -->|metrics / logs| Harness
+    LR -->|metrics / logs| Harness
+    TR -->|metrics / logs| Harness
+
+    style GW fill:#e1f5fe
+    style Context fill:#fff3e0
+    style DocsDB fill:#fff3e0
+    style Harness fill:#e8f5e9
+```
+
+```mermaid
+%%{init:{"theme":"base","themeVariables":{"primaryColor":"#e3f2fd","primaryTextColor":"#0d47a1","primaryBorderColor":"#0d47a1","lineColor":"#0d47a1","secondaryColor":"#fff3e0","tertiaryColor":"#f3e5f5"}}}%%
+
+graph TD
+    subgraph Request_Router_Expanded
+        direction TB
+
+        %% --- Ingress ---
+        Ingress[HTTP/gRPC Ingress<br>FastAPI / Go-Gin]
+
+        %% --- Pre-processing ---
+        PreAuth[Auth & Rate-Limit<br>JWT / OAuth2 / Quota]
+        PreCtx[Context Hydration<br>Redis Session / Vector Mem]
+
+        %% --- Routing Core ---
+        RouterCore[Router Core<br>Endpoint → Adapter Map]
+
+        %% --- Adapter Factory ---
+        Factory[Adapter Factory<br>Singleton Loader]
+
+        %% --- Adapter Pool ---
+        subgraph Adapter_Pool
+            OA[Ollama Adapter]
+            LC[LlamaCpp Adapter]
+            TR[Triton Adapter]
+            AA[AcmeLLM Adapter]
+        end
+
+        %% --- Error & Telemetry ---
+        EH[Error Handler<br>Global]
+        Metrics[(Prometheus<br>Metrics)]
+        Logs[(Loki / Jaeger<br>Traces)]
+
+        %% --- Outbound ---
+        Out[Runtime Processes]
+
+        %% --- Data Stores ---
+        ContextStore[(Redis<br>Short-term Context)]
+        PGStore[(PostgreSQL<br>Long-term Context)]
+        Registry[(ConfigMap / YAML<br>Adapter Registry)]
+
+        %% --- Flow ---
+        Ingress --> PreAuth --> PreCtx --> RouterCore
+        RouterCore -->|vendor| Factory
+        Factory --> OA
+        Factory --> LC
+        Factory --> TR
+        Factory --> AA
+        OA --> Out
+        LC --> Out
+        TR --> Out
+        AA --> Out
+
+        RouterCore -.->|session_id| ContextStore
+        RouterCore -.->|vector| PGStore
+        Factory -.->|config| Registry
+
+        RouterCore -.-> EH
+        RouterCore -.-> Metrics
+        RouterCore -.-> Logs
+    end
+
+    style RouterCore fill:#e3f2fd
+    style Factory fill:#fff3e0
+    style EH fill:#f3e5f5
+```
+
 
 Below is a high-level design sketch for a lightweight, scalable “API MCP Server-as-a-Service”—a unified façade for local LLM runtimes (Ollama, llama.cpp, local Triton servers, etc.) that also bundles in-house testing/fuzzing and a docs-crawler & indexer for all supported runtimes.
 
