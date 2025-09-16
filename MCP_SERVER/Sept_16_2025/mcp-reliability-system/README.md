@@ -1,7 +1,7 @@
 
 # MCP Reliability System
 
-A comprehensive, production-ready Haskell system for reliable and secure MCP (Model Context Protocol) tool execution. This system addresses the core reliability issues identified in the MCPToolBench++ paper while providing enterprise-grade security validation, real MCP integration, and comprehensive monitoring.
+A comprehensive, production-ready Haskell system for reliable and secure MCP (Model Context Protocol: https://arxiv.org/pdf/2508.07575) tool execution. This system addresses the core reliability issues identified in the MCPToolBench++ paper while providing enterprise-grade security validation, real MCP integration, and comprehensive monitoring.
 
 ## Features
 
