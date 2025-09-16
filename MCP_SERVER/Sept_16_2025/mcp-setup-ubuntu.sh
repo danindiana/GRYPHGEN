@@ -26,7 +26,8 @@ opam install -y \
     cohttp-lwt-unix \
     ppx_deriving \
     core \
-    dune
+    dune \
+    re2
 
 # Install GHC and Cabal for Haskell
 echo "Installing Haskell dependencies..."
@@ -35,16 +36,9 @@ sudo apt install -y ghc cabal-install
 # Update Cabal package list
 cabal update
 
-# Install Haskell packages for the tool API
-echo "Installing Haskell dependencies..."
-cabal install --lib \
-    aeson \
-    text \
-    containers \
-    http-client \
-    async \
-    stm \
-    mtl
+# NOTE: Dependencies are defined in the .cabal file.
+# We avoid 'cabal install --lib' to prevent v1-style conflicts.
+# First 'cabal build' will handle all dependencies automatically.
 
 # Create project structure
 echo "Creating project structure..."
@@ -122,16 +116,16 @@ type validation_error =
   | NetworkError of string
 [@@deriving show]
 
-(* Pure validation functions *)
+(* Pure validation functions using Re2 instead of Str *)
 let validate_geo_code (code: string) : bool =
   (* Simple regex for lat,lng format *)
-  let regex = Str.regexp "^-?[0-9]+\\.?[0-9]*,-?[0-9]+\\.?[0-9]*$" in
-  Str.string_match regex code 0
+  let regex = Re2.create_exn "^-?[0-9]+\\.?[0-9]*,-?[0-9]+\\.?[0-9]*$" in
+  Re2.matches regex code
 
 let validate_stock_ticker (ticker: string) : bool =
   (* NYSE/NASDAQ ticker format *)
-  let regex = Str.regexp "^[A-Z]{1,5}$" in
-  Str.string_match regex ticker 0
+  let regex = Re2.create_exn "^[A-Z]{1,5}$" in
+  Re2.matches regex ticker
 
 let validate_parameter (schema: parameter_schema) (value: string) : validation_error option =
   if schema.required && String.is_empty value then
@@ -224,11 +218,14 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.List (sortBy)
+import Data.Ord (comparing)
 import Control.Concurrent.Async
 import Control.Concurrent.STM
 import Control.Monad.IO.Class
 import Network.HTTP.Simple
 import Data.Aeson
+import Control.Concurrent (threadDelay)
 
 -- Enhanced types with domain awareness
 data ParamType = GeoCode | StockTicker | StringType | IntType | FilePathType
@@ -453,8 +450,14 @@ EOF
 
 echo "Setup complete! Project structure created in mcp-tool-api/"
 echo ""
+echo "IMPORTANT: Environment Setup Required"
+echo "Before building OCaml code, run: eval \$(opam env)"
+echo ""
 echo "Next steps:"
 echo "1. cd mcp-tool-api"
-echo "2. Build OCaml: cd ocaml && dune build"
-echo "3. Build Haskell: cd haskell && cabal build"
-echo "4. Run tests: ./tests/test_validation.sh"
+echo "2. Set OCaml environment: eval \$(opam env)"
+echo "3. Build OCaml: cd ocaml && dune build"
+echo "4. Build Haskell: cd haskell && cabal build"
+echo "5. Run tests: ./tests/test_validation.sh"
+echo ""
+echo "Note: Haskell dependencies will be fetched automatically on first build"
