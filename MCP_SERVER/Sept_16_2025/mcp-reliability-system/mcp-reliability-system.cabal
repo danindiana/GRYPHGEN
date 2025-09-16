@@ -1,0 +1,142 @@
+
+cabal-version: 3.0
+name: mcp-reliability-system
+version: 0.1.0.0
+synopsis: Production-ready MCP tool execution platform with reliability and security
+description: A comprehensive Haskell system for reliable and secure MCP (Model Context Protocol) tool execution, featuring circuit breakers, intelligent fallback selection, caching, security validation, and real MCP integration.
+homepage: https://github.com/example/mcp-reliability-system
+license: MIT
+license-file: LICENSE
+author: MCP Reliability Team
+maintainer: team@example.com
+copyright: 2025 MCP Reliability Team
+category: Network, Security, AI
+build-type: Simple
+extra-source-files: CHANGELOG.md, README.md
+
+common warnings
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules
+                 -Wpartial-fields -Wredundant-constraints
+
+library
+    import: warnings
+    exposed-modules:
+        -- Core Reliability System
+        MCP.Reliability.CircuitBreaker
+        MCP.Reliability.Fallback
+        MCP.Reliability.Cache
+        MCP.Reliability.Metrics
+        MCP.Reliability.Types
+        
+        -- Security Validation System
+        MCP.Security.ParameterGuard
+        MCP.Security.Sandbox
+        MCP.Security.Permissions
+        MCP.Security.InputSanitization
+        MCP.Security.Types
+        
+        -- Real MCP Integration
+        MCP.Protocol.Client
+        MCP.Protocol.Server
+        MCP.Protocol.Discovery
+        MCP.Protocol.Transport
+        MCP.Protocol.Types
+        MCP.Protocol.JsonRPC
+        
+        -- Core System
+        MCP.Core.Engine
+        MCP.Core.Types
+        MCP.Core.Config
+        
+        -- Monitoring and Observability
+        MCP.Monitoring.Prometheus
+        MCP.Monitoring.Logging
+        MCP.Monitoring.Health
+        
+    build-depends:
+        base >= 4.16 && < 5,
+        aeson >= 2.0,
+        async >= 2.2,
+        bytestring >= 0.11,
+        containers >= 0.6,
+        cryptonite >= 0.30,
+        directory >= 1.3,
+        exceptions >= 0.10,
+        filepath >= 1.4,
+        hashable >= 1.4,
+        http-client >= 0.7,
+        http-client-tls >= 0.3,
+        http-types >= 0.12,
+        lens >= 5.0,
+        memory >= 0.18,
+        mtl >= 2.2,
+        network >= 3.1,
+        process >= 1.6,
+        prometheus-client >= 1.0,
+        random >= 1.2,
+        regex-tdfa >= 1.3,
+        safe >= 0.3,
+        scientific >= 0.3,
+        stm >= 2.5,
+        text >= 2.0,
+        time >= 1.12,
+        transformers >= 0.5,
+        unix >= 2.7,
+        unordered-containers >= 0.2,
+        uuid >= 1.3,
+        vector >= 0.13,
+        wai >= 3.2,
+        warp >= 3.3,
+        websockets >= 0.12,
+        yaml >= 0.11
+        
+    hs-source-dirs: src
+    default-language: Haskell2010
+
+executable mcp-server
+    import: warnings
+    main-is: Main.hs
+    build-depends:
+        base,
+        mcp-reliability-system,
+        optparse-applicative >= 0.17
+    hs-source-dirs: app
+    default-language: Haskell2010
+
+test-suite mcp-reliability-tests
+    import: warnings
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    hs-source-dirs: test
+    main-is: Spec.hs
+    other-modules:
+        MCP.Reliability.CircuitBreakerSpec
+        MCP.Security.ParameterGuardSpec
+        MCP.Protocol.ClientSpec
+        MCP.Core.EngineSpec
+    build-depends:
+        base,
+        mcp-reliability-system,
+        hspec >= 2.10,
+        hspec-discover >= 2.10,
+        QuickCheck >= 2.14,
+        async,
+        stm
+
+benchmark mcp-benchmarks
+    import: warnings
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    hs-source-dirs: bench
+    main-is: Main.hs
+    other-modules:
+        MCP.Benchmarks.Reliability
+        MCP.Benchmarks.Security
+        MCP.Benchmarks.Protocol
+    build-depends:
+        base,
+        mcp-reliability-system,
+        criterion >= 1.6,
+        deepseq >= 1.4,
+        random

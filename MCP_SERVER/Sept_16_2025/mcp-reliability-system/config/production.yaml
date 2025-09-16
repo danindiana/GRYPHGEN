@@ -1,0 +1,136 @@
+
+# MCP Reliability System Production Configuration
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  max_connections: 1000
+  request_timeout: 30
+
+reliability:
+  circuit_breaker:
+    failure_threshold: 5
+    timeout_seconds: 30
+    recovery_timeout: 60
+    half_open_max_calls: 3
+  
+  cache:
+    max_size: 10000
+    ttl_seconds: 300
+    cleanup_interval: 60
+    redis_enabled: true
+    redis_host: "redis"
+    redis_port: 6379
+  
+  fallback:
+    enabled: true
+    max_fallbacks: 3
+    fallback_timeout: 10
+    strategy: "health_based"
+  
+  retry:
+    max_retries: 3
+    base_delay_ms: 100
+    max_delay_ms: 5000
+    exponential_backoff: true
+
+security:
+  sandbox:
+    enabled: true
+    timeout_seconds: 30
+    memory_limit_mb: 512
+    allow_network_access: false
+    allow_filesystem_access: false
+    allowed_directories: ["/tmp", "/app/sandbox"]
+    blocked_commands: ["rm", "sudo", "chmod", "chown"]
+  
+  parameter_guard:
+    max_input_length: 10000
+    allowed_patterns:
+      - regex: "^[a-zA-Z0-9_\\-\\.\\s]+$"
+        description: "Alphanumeric with basic punctuation"
+        severity: "low"
+    blocked_patterns:
+      - regex: "<script[^>]*>"
+        description: "Script tag injection"
+        severity: "high"
+      - regex: "javascript:"
+        description: "JavaScript protocol"
+        severity: "high"
+      - regex: "eval\\s*\\("
+        description: "Eval function call"
+        severity: "high"
+      - regex: "(union|select|insert|update|delete|drop)\\s+"
+        description: "SQL injection keywords"
+        severity: "high"
+    enable_sql_injection_check: true
+    enable_xss_check: true
+    enable_command_injection_check: true
+  
+  permissions:
+    default_permissions: ["read"]
+    admin_permissions: ["read", "write", "execute", "admin"]
+    guest_permissions: ["read"]
+    permission_inheritance: true
+  
+  audit_logging: true
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    file: "/app/logs/mcp-server.log"
+    max_size_mb: 100
+    max_files: 10
+  
+  health_check:
+    enabled: true
+    path: "/health"
+    interval_seconds: 30
+  
+  tracing:
+    enabled: false
+    jaeger_endpoint: "http://jaeger:14268/api/traces"
+
+mcp:
+  protocol_version: "2025-03-26"
+  
+  discovery:
+    enabled: true
+    interval_seconds: 60
+    timeout_seconds: 10
+    max_retries: 3
+    
+  transport:
+    stdio:
+      enabled: true
+      buffer_size: 8192
+    http:
+      enabled: true
+      host: "0.0.0.0"
+      port: 8080
+      path: "/mcp"
+      secure: false
+    websocket:
+      enabled: true
+      host: "0.0.0.0"
+      port: 8081
+      path: "/ws"
+      
+  capabilities:
+    tools: true
+    resources: true
+    prompts: true
+    sampling: false
+    roots: true
+
+performance:
+  max_concurrent_requests: 100
+  request_queue_size: 1000
+  worker_threads: 4
+  gc_interval_seconds: 300
