@@ -2,6 +2,15 @@
 
 **Grid Resource Prioritization in Heterogeneous Environments**
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub stars](https://img.shields.io/github/stars/danindiana/GRYPHGEN.svg?style=social&label=Star)](https://github.com/danindiana/GRYPHGEN)
+[![GitHub forks](https://img.shields.io/github/forks/danindiana/GRYPHGEN.svg?style=social&label=Fork)](https://github.com/danindiana/GRYPHGEN/fork)
+[![GitHub issues](https://img.shields.io/github/issues/danindiana/GRYPHGEN.svg)](https://github.com/danindiana/GRYPHGEN/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/danindiana/GRYPHGEN.svg)](https://github.com/danindiana/GRYPHGEN/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/danindiana/GRYPHGEN.svg)](https://github.com/danindiana/GRYPHGEN/commits)
+[![Repo size](https://img.shields.io/github/repo-size/danindiana/GRYPHGEN.svg)](https://github.com/danindiana/GRYPHGEN)
+[![Contributors](https://img.shields.io/github/contributors/danindiana/GRYPHGEN.svg)](https://github.com/danindiana/GRYPHGEN/graphs/contributors)
+
 GRYPHGEN (pronounced 'Griffin') is a framework that leverages large language models (LLMs) to automate software production at scale. The framework consists of three main components: SYMORQ, SYMORG, and SYMAUG.
 
 ## Table of Contents
@@ -395,7 +404,7 @@ Please be respectful and constructive in all interactions. We aim to maintain a 
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
 ---
 
