@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'novelty-llm-system'
+    environment: 'production'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'novelty-llm-api'
+    static_configs:
+      - targets: ['novelty-llm-api:9090']
+    metrics_path: '/metrics'
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  - job_name: 'milvus'
+    static_configs:
+      - targets: ['milvus:9091']
