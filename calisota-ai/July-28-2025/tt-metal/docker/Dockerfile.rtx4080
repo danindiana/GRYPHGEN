@@ -1,0 +1,59 @@
+# Dockerfile for NVIDIA RTX 4080 development environment
+FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
+
+LABEL maintainer="GRYPHGEN Project"
+LABEL description="Dynamic Cortex Communication Framework - RTX 4080"
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    python3 \
+    python3-pip \
+    python3-dev \
+    clang-format \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install CUDA libraries
+RUN apt-get update && apt-get install -y \
+    libcublas-12-4 \
+    libcublas-dev-12-4 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip3 install --no-cache-dir \
+    numpy \
+    matplotlib \
+    pycuda
+
+# Set up CUDA environment
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=$CUDA_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+# Create workspace
+WORKDIR /workspace
+COPY . /workspace/dynamic-cortex
+
+# Build Dynamic Cortex
+WORKDIR /workspace/dynamic-cortex
+RUN mkdir -p build && \
+    cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TT_METAL=OFF \
+        -DBUILD_CUDA=ON \
+        -DBUILD_TESTS=ON \
+        -DBUILD_EXAMPLES=ON && \
+    make -j$(nproc)
+
+# Set up runtime
+WORKDIR /workspace/dynamic-cortex
+CMD ["/bin/bash"]

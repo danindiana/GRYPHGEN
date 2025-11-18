@@ -1,0 +1,68 @@
+# Dockerfile for Tenstorrent Greyskull development environment
+FROM ubuntu:22.04
+
+LABEL maintainer="GRYPHGEN Project"
+LABEL description="Dynamic Cortex Communication Framework - Greyskull e75/e150"
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    python3 \
+    python3-pip \
+    python3-dev \
+    libboost-all-dev \
+    libyaml-cpp-dev \
+    libhwloc-dev \
+    pkg-config \
+    clang-format \
+    doxygen \
+    graphviz \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip3 install --no-cache-dir \
+    pybind11 \
+    numpy \
+    pyyaml \
+    matplotlib \
+    scipy
+
+# Install TT-Metal SDK
+ENV TT_METAL_HOME=/opt/tt-metal
+RUN git clone https://github.com/tenstorrent/tt-metal.git $TT_METAL_HOME && \
+    cd $TT_METAL_HOME && \
+    ./install_dependencies.sh && \
+    ./build_metal.sh
+
+# Set up environment
+ENV PATH=$TT_METAL_HOME/bin:$PATH
+ENV PYTHONPATH=$TT_METAL_HOME:$PYTHONPATH
+ENV LD_LIBRARY_PATH=$TT_METAL_HOME/lib:$LD_LIBRARY_PATH
+
+# Create workspace
+WORKDIR /workspace
+COPY . /workspace/dynamic-cortex
+
+# Build Dynamic Cortex
+WORKDIR /workspace/dynamic-cortex
+RUN mkdir -p build && \
+    cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TT_METAL=ON \
+        -DBUILD_CUDA=OFF \
+        -DBUILD_TESTS=ON \
+        -DBUILD_EXAMPLES=ON && \
+    make -j$(nproc)
+
+# Set up runtime
+WORKDIR /workspace/dynamic-cortex
+CMD ["/bin/bash"]

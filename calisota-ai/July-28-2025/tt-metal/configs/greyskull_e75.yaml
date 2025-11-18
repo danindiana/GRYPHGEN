@@ -1,0 +1,95 @@
+# Tenstorrent Greyskull e75 Configuration
+# 8GB GDDR6, 64 Tensix cores, PCIe Gen4 x16
+
+hardware:
+  name: "Greyskull e75"
+  vendor: "Tenstorrent"
+  architecture: "Greyskull"
+
+compute:
+  num_cores: 64
+  core_grid:
+    rows: 8
+    cols: 8
+  core_frequency_mhz: 1000
+
+  # Tensix core specifications
+  tensix:
+    risc_v_cores_per_tensix: 5
+    fpu_units_per_core: 2
+    simd_width: 32
+
+memory:
+  dram:
+    type: "GDDR6"
+    capacity_gb: 8
+    bandwidth_gbps: 128
+
+  l1_cache:
+    size_mb: 1.0
+    associativity: 4
+
+  core_sram:
+    size_kb: 1200
+    bandwidth_tbps: 4.0
+
+interconnect:
+  noc:
+    num_nocs: 2
+    topology: "mesh"
+    bandwidth_per_noc_gbps: 500
+
+  pcie:
+    generation: 4
+    lanes: 16
+    bandwidth_gbps: 32
+
+performance:
+  peak_compute:
+    fp32_gflops: 245
+    fp16_gflops: 490
+    int8_tops: 980
+
+  typical_power_watts: 75
+  tdp_watts: 85
+
+# Dynamic Cortex specific configuration
+cortex_config:
+  v1_area:
+    num_cores: 32
+    core_range:
+      start: [0, 0]
+      end: [7, 3]
+    buffer_size_kb: 256
+
+  lm_area:
+    num_cores: 16
+    core_range:
+      start: [0, 4]
+      end: [7, 5]
+    buffer_size_kb: 256
+
+  streams:
+    feedforward:
+      source_area: "v1"
+      target_area: "lm"
+      latency_us: 2000
+      bandwidth: "high"
+      noc_id: 0
+
+    feedback:
+      source_area: "lm"
+      target_area: "v1"
+      latency_us: 3000
+      bandwidth: "normal"
+      noc_id: 1
+
+  events:
+    channel_rotation:
+      period_ms: 121  # Default (No-go trial)
+      rewarded_period_ms: 15
+
+  optimization:
+    enable_sparse_transfer: true
+    enable_power_gating: true
+    compression_ratio: 0.7
