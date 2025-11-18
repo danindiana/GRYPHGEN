@@ -1,0 +1,114 @@
+# Production Configuration
+
+environment: production
+debug: false
+log_level: INFO
+
+# API Settings
+api:
+  host: 0.0.0.0
+  port: 8080
+  workers: 4
+  reload: false
+  cors_origins:
+    - https://yourdomain.com
+
+# Novelty Engine
+novelty:
+  model_name: all-MiniLM-L6-v2
+  device: cuda  # Use GPU in production
+  k_neighbors: 20
+  weights:
+    semantic: 0.35
+    entropy: 0.25
+    rarity: 0.20
+    cluster: 0.15
+    temporal: 0.05
+
+# Caching
+cache:
+  semantic:
+    enabled: true
+    similarity_threshold: 0.90  # Higher threshold for production
+    ttl_seconds: 7200
+    max_results: 10
+  response:
+    enabled: true
+    ttl_seconds: 7200
+    max_size_mb: 2000
+
+# Redis
+redis:
+  url: ${REDIS_URL}
+  max_connections: 50
+  decode_responses: true
+  socket_timeout: 10
+  socket_connect_timeout: 10
+  socket_keepalive: true
+  retry_on_timeout: true
+
+# PostgreSQL
+database:
+  url: ${POSTGRES_URL}
+  pool_size: 20
+  max_overflow: 40
+  pool_pre_ping: true
+  echo: false
+
+# Milvus
+milvus:
+  host: ${MILVUS_HOST}
+  port: 19530
+  collection_name: novelty_embeddings_prod
+  index_type: IVF_SQ8
+  metric_type: L2
+  nlist: 1024
+
+# Ollama
+ollama:
+  host: ${OLLAMA_HOST}
+  timeout: 300
+  models:
+    - llama2:13b
+    - mistral:7b-instruct
+    - codellama:13b
+
+# Security
+security:
+  jwt_secret: ${JWT_SECRET}
+  jwt_algorithm: HS256
+  jwt_expiration: 1800
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    burst: 100
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+  logging:
+    format: json
+    level: INFO
+  tracing:
+    enabled: true
+    jaeger_endpoint: ${JAEGER_ENDPOINT}
+
+# Resource Limits
+limits:
+  max_prompt_length: 10000
+  max_tokens: 4096
+  max_batch_size: 32
+  timeout_seconds: 120
+
+# PII Detection
+pii:
+  enabled: true
+  anonymize: true
+  entities:
+    - PERSON
+    - EMAIL_ADDRESS
+    - PHONE_NUMBER
+    - CREDIT_CARD
+    - SSN

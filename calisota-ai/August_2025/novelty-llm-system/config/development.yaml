@@ -1,0 +1,92 @@
+# Development Configuration
+
+environment: development
+debug: true
+log_level: DEBUG
+
+# API Settings
+api:
+  host: 0.0.0.0
+  port: 8080
+  workers: 1
+  reload: true
+  cors_origins:
+    - http://localhost:3000
+    - http://localhost:8080
+
+# Novelty Engine
+novelty:
+  model_name: all-MiniLM-L6-v2
+  device: cpu
+  k_neighbors: 10
+  weights:
+    semantic: 0.35
+    entropy: 0.25
+    rarity: 0.20
+    cluster: 0.15
+    temporal: 0.05
+
+# Caching
+cache:
+  semantic:
+    enabled: true
+    similarity_threshold: 0.85
+    ttl_seconds: 3600
+    max_results: 5
+  response:
+    enabled: true
+    ttl_seconds: 3600
+    max_size_mb: 100
+
+# Redis
+redis:
+  url: redis://localhost:6379
+  max_connections: 10
+  decode_responses: true
+  socket_timeout: 5
+  socket_connect_timeout: 5
+
+# PostgreSQL
+database:
+  url: postgresql://novelty:novelty_pass@localhost:5432/novelty_db
+  pool_size: 5
+  max_overflow: 10
+  echo: true
+
+# Milvus
+milvus:
+  host: localhost
+  port: 19530
+  collection_name: novelty_embeddings
+  index_type: IVF_FLAT
+  metric_type: L2
+  nlist: 128
+
+# Ollama
+ollama:
+  host: http://localhost:11434
+  timeout: 120
+  models:
+    - llama2
+    - mistral
+    - codellama
+
+# Security
+security:
+  jwt_secret: dev-secret-key-change-in-production
+  jwt_algorithm: HS256
+  jwt_expiration: 3600
+  rate_limit:
+    enabled: false
+    requests_per_minute: 100
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+  logging:
+    format: json
+    level: DEBUG
+  tracing:
+    enabled: false
