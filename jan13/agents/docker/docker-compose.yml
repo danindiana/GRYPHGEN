@@ -1,0 +1,104 @@
+version: "3.8"
+
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # Infrastructure Agent API
+  # ═══════════════════════════════════════════════════════════════
+  infrastructure-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: gryphgen-infrastructure-agent
+    hostname: infrastructure-agent
+    ports:
+      - "8080:8080"      # FastAPI
+      - "11434:11434"    # Nginx reverse proxy
+      - "11435:11435"    # Ollama direct access
+      - "9090:9090"      # Prometheus metrics
+    volumes:
+      - ./data/models:/root/.ollama/models
+      - ./data/logs:/var/log/gryphgen
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LOG_LEVEL=INFO
+      - OLLAMA_HOST=127.0.0.1:11435
+      - OLLAMA_NUM_GPU=1
+      - OLLAMA_GPU_MEMORY_FRACTION=0.9
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ═══════════════════════════════════════════════════════════════
+  # Prometheus Monitoring
+  # ═══════════════════════════════════════════════════════════════
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: gryphgen-prometheus
+    hostname: prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════
+  # Grafana Dashboards
+  # ═══════════════════════════════════════════════════════════════
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: gryphgen-grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+# ═══════════════════════════════════════════════════════════════
+# Networks
+# ═══════════════════════════════════════════════════════════════
+networks:
+  gryphgen-network:
+    driver: bridge
+    name: gryphgen-network
+
+# ═══════════════════════════════════════════════════════════════
+# Volumes
+# ═══════════════════════════════════════════════════════════════
+volumes:
+  prometheus-data:
+    name: gryphgen-prometheus-data
+  grafana-data:
+    name: gryphgen-grafana-data
