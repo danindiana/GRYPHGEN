@@ -1,0 +1,214 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, claude/* ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests every day at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CABAL_VERSION: '3.10'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        ghc: ['9.4.8', '9.6.4', '9.8.1']
+        exclude:
+          # Exclude some combinations to save CI time
+          - os: macos-latest
+            ghc: '9.4.8'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Cache Cabal store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/store
+            ~/.cabal/packages
+            dist-newstyle
+          key: ${{ runner.os }}-ghc-${{ matrix.ghc }}-cabal-${{ hashFiles('**/*.cabal', '**/cabal.project') }}
+          restore-keys: |
+            ${{ runner.os }}-ghc-${{ matrix.ghc }}-cabal-
+            ${{ runner.os }}-ghc-${{ matrix.ghc }}-
+            ${{ runner.os }}-
+
+      - name: Update Cabal package list
+        run: cabal update
+
+      - name: Install dependencies
+        run: cabal build --only-dependencies --enable-tests --enable-benchmarks
+
+      - name: Build
+        run: cabal build --enable-tests --enable-benchmarks
+
+      - name: Run tests
+        run: cabal test --test-show-details=streaming --test-option=--color
+
+      - name: Run benchmarks (quick)
+        run: cabal bench --benchmark-options="--quick"
+        continue-on-error: true
+
+      - name: Generate coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.ghc == '9.6.4'
+        run: |
+          cabal test --enable-coverage
+          cabal haddock --haddock-all --haddock-hyperlink-source
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.ghc == '9.6.4'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./dist-newstyle/build/**/hpc/vanilla/html/*/hpc_index.html
+          fail_ci_if_error: false
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.6.4'
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Cache Cabal store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/store
+            ~/.cabal/packages
+          key: ${{ runner.os }}-lint-cabal-${{ hashFiles('**/*.cabal') }}
+
+      - name: Install HLint
+        run: cabal install hlint --install-method=copy --installdir=$HOME/.local/bin
+
+      - name: Run HLint
+        run: hlint src/ test/ bench/ app/
+
+      - name: Install Ormolu
+        run: cabal install ormolu --install-method=copy --installdir=$HOME/.local/bin
+
+      - name: Check formatting
+        run: |
+          find src test bench app -name "*.hs" -exec ormolu --mode check {} \;
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        run: |
+          docker build -f docker/Dockerfile -t mcp-reliability-system:${{ github.sha }} .
+
+      - name: Test Docker image
+        run: |
+          docker run --rm mcp-reliability-system:${{ github.sha }} --version || true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-and-test, lint, docker]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.6.4'
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Build release binary
+        run: |
+          cabal update
+          cabal build --enable-optimization=2
+          cabal install --install-method=copy --installdir=./release
+
+      - name: Create release archive
+        run: |
+          tar -czf mcp-reliability-system-${{ github.ref_name }}-linux-x86_64.tar.gz -C release .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            mcp-reliability-system-${{ github.ref_name }}-linux-x86_64.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

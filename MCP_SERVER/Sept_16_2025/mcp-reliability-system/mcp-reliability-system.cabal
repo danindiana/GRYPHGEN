@@ -1,18 +1,24 @@
 
 cabal-version: 3.0
 name: mcp-reliability-system
-version: 0.1.0.0
+version: 0.2.0.0
 synopsis: Production-ready MCP tool execution platform with reliability and security
 description: A comprehensive Haskell system for reliable and secure MCP (Model Context Protocol) tool execution, featuring circuit breakers, intelligent fallback selection, caching, security validation, and real MCP integration.
-homepage: https://github.com/example/mcp-reliability-system
+homepage: https://github.com/danindiana/GRYPHGEN
+bug-reports: https://github.com/danindiana/GRYPHGEN/issues
 license: MIT
 license-file: LICENSE
-author: MCP Reliability Team
-maintainer: team@example.com
-copyright: 2025 MCP Reliability Team
+author: GRYPHGEN Team
+maintainer: gryphgen@example.com
+copyright: 2025 GRYPHGEN Team
 category: Network, Security, AI
 build-type: Simple
-extra-source-files: CHANGELOG.md, README.md
+extra-source-files:
+    CHANGELOG.md
+    README.md
+    docs/*.md
+    config/*.yaml
+tested-with: GHC == 9.4.8, GHC == 9.6.4, GHC == 9.8.1
 
 common warnings
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates
@@ -55,41 +61,41 @@ library
         MCP.Monitoring.Health
         
     build-depends:
-        base >= 4.16 && < 5,
-        aeson >= 2.0,
-        async >= 2.2,
-        bytestring >= 0.11,
-        containers >= 0.6,
-        cryptonite >= 0.30,
-        directory >= 1.3,
-        exceptions >= 0.10,
-        filepath >= 1.4,
-        hashable >= 1.4,
-        http-client >= 0.7,
-        http-client-tls >= 0.3,
-        http-types >= 0.12,
-        lens >= 5.0,
-        memory >= 0.18,
-        mtl >= 2.2,
-        network >= 3.1,
-        process >= 1.6,
-        prometheus-client >= 1.0,
-        random >= 1.2,
-        regex-tdfa >= 1.3,
-        safe >= 0.3,
-        scientific >= 0.3,
-        stm >= 2.5,
-        text >= 2.0,
-        time >= 1.12,
-        transformers >= 0.5,
-        unix >= 2.7,
-        unordered-containers >= 0.2,
-        uuid >= 1.3,
-        vector >= 0.13,
-        wai >= 3.2,
-        warp >= 3.3,
-        websockets >= 0.12,
-        yaml >= 0.11
+        base >= 4.17 && < 5,
+        aeson >= 2.2 && < 2.3,
+        async >= 2.2 && < 2.3,
+        bytestring >= 0.11 && < 0.13,
+        containers >= 0.6 && < 0.8,
+        cryptonite >= 0.30 && < 0.31,
+        directory >= 1.3 && < 1.4,
+        exceptions >= 0.10 && < 0.11,
+        filepath >= 1.4 && < 1.6,
+        hashable >= 1.4 && < 1.5,
+        http-client >= 0.7 && < 0.8,
+        http-client-tls >= 0.3 && < 0.4,
+        http-types >= 0.12 && < 0.13,
+        lens >= 5.2 && < 5.4,
+        memory >= 0.18 && < 0.19,
+        mtl >= 2.3 && < 2.4,
+        network >= 3.1 && < 3.2,
+        process >= 1.6 && < 1.7,
+        prometheus-client >= 1.1 && < 1.2,
+        random >= 1.2 && < 1.3,
+        regex-tdfa >= 1.3 && < 1.4,
+        safe >= 0.3 && < 0.4,
+        scientific >= 0.3 && < 0.4,
+        stm >= 2.5 && < 2.6,
+        text >= 2.0 && < 2.2,
+        time >= 1.12 && < 1.15,
+        transformers >= 0.6 && < 0.7,
+        unix >= 2.8 && < 2.9,
+        unordered-containers >= 0.2 && < 0.3,
+        uuid >= 1.3 && < 1.4,
+        vector >= 0.13 && < 0.14,
+        wai >= 3.2 && < 3.3,
+        warp >= 3.3 && < 3.5,
+        websockets >= 0.13 && < 0.14,
+        yaml >= 0.11 && < 0.12
         
     hs-source-dirs: src
     default-language: Haskell2010
@@ -118,11 +124,12 @@ test-suite mcp-reliability-tests
     build-depends:
         base,
         mcp-reliability-system,
-        hspec >= 2.10,
-        hspec-discover >= 2.10,
-        QuickCheck >= 2.14,
+        hspec >= 2.11 && < 2.12,
+        hspec-discover >= 2.11 && < 2.12,
+        QuickCheck >= 2.14 && < 2.15,
         async,
-        stm
+        stm,
+        hspec-expectations >= 0.8
 
 benchmark mcp-benchmarks
     import: warnings
@@ -137,6 +144,7 @@ benchmark mcp-benchmarks
     build-depends:
         base,
         mcp-reliability-system,
-        criterion >= 1.6,
-        deepseq >= 1.4,
-        random
+        criterion >= 1.6 && < 1.7,
+        deepseq >= 1.5 && < 1.6,
+        random,
+        tasty-bench >= 0.3

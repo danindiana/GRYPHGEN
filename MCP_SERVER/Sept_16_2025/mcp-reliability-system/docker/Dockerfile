@@ -1,6 +1,7 @@
 
 # Multi-stage build for MCP Reliability System
-FROM haskell:9.4-slim as builder
+# Use latest GHC for better performance and features
+FROM haskell:9.6-slim as builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -37,10 +38,12 @@ FROM debian:bookworm-slim
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    curl \
     libgmp10 \
     libssl3 \
     libtinfo6 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Create non-root user
 RUN useradd -m -u 1000 mcpuser
