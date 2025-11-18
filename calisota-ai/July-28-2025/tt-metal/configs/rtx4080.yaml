@@ -1,0 +1,115 @@
+# NVIDIA RTX 4080 Configuration
+# 16GB GDDR6X, Ada Lovelace architecture
+
+hardware:
+  name: "RTX 4080"
+  vendor: "NVIDIA"
+  architecture: "Ada Lovelace"
+  compute_capability: "8.9"
+
+compute:
+  streaming_multiprocessors: 76
+  cuda_cores: 9728
+  tensor_cores: 304
+  rt_cores: 76
+
+  frequencies:
+    base_clock_mhz: 2205
+    boost_clock_mhz: 2505
+    memory_clock_mhz: 1400  # Effective: 22.4 Gbps
+
+memory:
+  vram:
+    type: "GDDR6X"
+    capacity_gb: 16
+    bus_width_bits: 256
+    bandwidth_gbps: 716.8
+
+  l2_cache:
+    size_mb: 64
+
+  shared_memory_per_sm:
+    size_kb: 100
+
+interconnect:
+  pcie:
+    generation: 4
+    lanes: 16
+    bandwidth_gbps: 32
+
+  nvlink:
+    enabled: false
+
+performance:
+  peak_compute:
+    fp32_tflops: 48.74
+    fp16_tflops: 97.5  # With Tensor Cores
+    int8_tops: 195
+
+  ray_tracing:
+    gigrays_per_second: 114
+
+  typical_power_watts: 320
+  tdp_watts: 320
+
+# CUDA configuration
+cuda_config:
+  version: "12.4"
+
+  kernel_launch:
+    max_blocks_per_grid: 2147483647
+    max_threads_per_block: 1024
+    max_threads_per_sm: 1536
+    max_blocks_per_sm: 16
+
+  memory:
+    max_shared_memory_per_block_kb: 48
+    max_shared_memory_per_sm_kb: 100
+    max_registers_per_block: 65536
+    max_registers_per_thread: 255
+
+  warp:
+    size: 32
+    max_warps_per_sm: 48
+
+# Dynamic Cortex specific configuration
+cortex_config:
+  v1_area:
+    num_blocks: 64
+    threads_per_block: 256
+    shared_memory_kb: 48
+
+  lm_area:
+    num_blocks: 32
+    threads_per_block: 256
+    shared_memory_kb: 48
+
+  streams:
+    feedforward:
+      source_area: "v1"
+      target_area: "lm"
+      use_streams: true
+      priority: "normal"
+
+    feedback:
+      source_area: "lm"
+      target_area: "v1"
+      use_streams: true
+      priority: "high"
+
+  events:
+    channel_rotation:
+      period_ms: 121
+      rewarded_period_ms: 15
+      use_cuda_events: true
+
+  optimization:
+    use_tensor_cores: true
+    precision: "mixed"  # FP16 input, FP32 accumulation
+    enable_kernel_fusion: true
+    batch_size: 32
+
+  memory_management:
+    pool_allocator: true
+    unified_memory: false
+    prefetch_enabled: true
