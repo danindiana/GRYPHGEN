@@ -1,0 +1,18 @@
+[Unit]
+Description=Ollama LLM Service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ollama serve
+User={{ user }}
+Group={{ group }}
+Restart=always
+RestartSec=3
+Environment="OLLAMA_HOST={{ host }}:{{ port }}"
+Environment="OLLAMA_NUM_GPU={{ num_gpu }}"
+Environment="OLLAMA_GPU_MEMORY_FRACTION={{ gpu_memory_fraction }}"
+Environment="PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target

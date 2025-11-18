@@ -1,0 +1,54 @@
+# GRYPHGEN Infrastructure Agents Configuration
+# This file provides an example configuration for deploying infrastructure
+
+agent:
+  name: infrastructure-agent
+  enabled: true
+  auto_recover: true
+  health_check_interval: 30  # seconds
+  max_retries: 4
+  retry_delay: 2.0  # seconds
+  log_level: INFO
+
+gpu:
+  enabled: true
+  gpu_id: 0
+  memory_fraction: 0.9  # Use 90% of GPU memory (RTX 4080: ~14.4GB)
+  num_threads: 8
+  cuda_version: "12.0+"
+  compute_capability: "8.9"
+  vram_gb: 16
+
+ollama:
+  host: 127.0.0.1
+  port: 11435
+  models:
+    - llama2
+    - mistral
+    - codellama
+  num_gpu: 1
+  gpu_memory_fraction: 0.9
+  context_length: 4096
+  batch_size: 32
+  service_file: /etc/systemd/system/ollama.service
+  auto_pull_models: true
+
+nginx:
+  host: 0.0.0.0
+  port: 11434
+  upstream_host: 127.0.0.1
+  upstream_port: 11435
+  server_name: _
+  config_file: /etc/nginx/sites-available/ollama
+  enabled_file: /etc/nginx/sites-enabled/ollama
+  ssl_enabled: false
+  proxy_timeout: 300  # seconds
+  client_max_body_size: "100M"
+
+prometheus:
+  enabled: true
+  port: 9090
+
+metrics:
+  enabled: true
+  structured_logging: true

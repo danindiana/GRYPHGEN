@@ -1,0 +1,32 @@
+# Include production dependencies
+-r requirements.txt
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+pytest-cov>=6.0.0
+pytest-timeout>=2.3.0
+pytest-mock>=3.14.0
+httpx-mock>=0.1.0
+
+# Code Quality
+black>=24.10.0
+ruff>=0.7.0
+mypy>=1.13.0
+isort>=5.13.0
+
+# Security
+bandit>=1.7.10
+safety>=3.2.0
+
+# Documentation
+mkdocs>=1.6.0
+mkdocs-material>=9.5.0
+mkdocstrings[python]>=0.26.0
+
+# Pre-commit
+pre-commit>=4.0.0
+
+# Docker
+docker>=7.1.0
+docker-compose>=1.29.2

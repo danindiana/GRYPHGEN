@@ -1,0 +1,56 @@
+# Prometheus configuration for GRYPHGEN Infrastructure Agents
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'gryphgen'
+    environment: 'production'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Load rules once and periodically evaluate them
+# rule_files:
+#   - 'alerts/*.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Infrastructure Agent metrics
+  - job_name: 'infrastructure-agent'
+    static_configs:
+      - targets: ['infrastructure-agent:8080']
+        labels:
+          service: 'infrastructure-agent'
+          component: 'api'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'
+
+  # Ollama metrics (if available)
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['infrastructure-agent:11435']
+        labels:
+          service: 'ollama'
+          component: 'llm'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Nginx metrics (if stub_status enabled)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['infrastructure-agent:11434']
+        labels:
+          service: 'nginx'
+          component: 'proxy'
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
