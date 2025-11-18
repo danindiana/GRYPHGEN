@@ -1,0 +1,125 @@
+# ============================================================================
+# GPU Configuration for NVIDIA RTX 4080 (16GB VRAM)
+# ============================================================================
+
+gpu:
+  # Device configuration
+  device: "cuda:0"
+  device_id: 0
+
+  # Memory management
+  memory_limit: "14GB"  # Reserve 2GB for system overhead
+  memory_fraction: 0.875  # 14/16 = 0.875
+  allow_growth: true
+  per_process_memory_fraction: 0.875
+
+  # Compute capability
+  compute_capability: 8.9  # RTX 4080
+  architecture: "Ada Lovelace"
+
+  # Optimization flags
+  mixed_precision: true
+  tf32_enabled: true  # TensorFloat-32 for faster training
+  cudnn_benchmark: true  # Auto-tune cuDNN kernels
+  cudnn_deterministic: false  # Set to true for reproducibility
+
+  # Tensor cores
+  tensor_cores_enabled: true
+  use_amp: true  # Automatic Mixed Precision
+
+  # Performance tuning
+  max_split_size_mb: 512
+  allocator: "native"  # or "cudaMallocAsync" for CUDA 11.2+
+
+# Model-specific GPU settings
+models:
+  transformers:
+    device_map: "auto"
+    low_cpu_mem_usage: true
+    torch_dtype: "bfloat16"  # Better than fp16 for Ada Lovelace
+    max_memory: {0: "14GB"}
+    offload_folder: "/tmp/offload"
+
+  inference:
+    batch_size: 32
+    max_batch_size: 64
+    dynamic_batching: true
+    preferred_batch_sizes: [8, 16, 32]
+    max_queue_delay_microseconds: 100
+
+  training:
+    gradient_checkpointing: true
+    gradient_accumulation_steps: 2
+    fp16: false  # Use bf16 instead for Ada Lovelace
+    bf16: true
+    local_rank: 0
+
+# Service-specific configurations
+services:
+  code_generation:
+    model_name: "gpt-4-turbo"
+    batch_size: 16
+    max_length: 4096
+    use_cache: true
+    num_beams: 4
+    temperature: 0.7
+    top_p: 0.9
+
+  documentation:
+    model_name: "t5-base"
+    batch_size: 32
+    max_length: 512
+    use_cache: true
+
+  project_management:
+    rl_batch_size: 256
+    buffer_size: 100000
+    learning_rate: 0.0003
+
+  collaboration:
+    gnn_batch_size: 64
+    hidden_channels: 128
+    num_layers: 3
+
+  self_improvement:
+    meta_batch_size: 16
+    inner_lr: 0.01
+    outer_lr: 0.001
+    num_inner_steps: 5
+
+# Monitoring
+monitoring:
+  gpu_utilization_target: 0.85
+  memory_utilization_target: 0.90
+  temperature_limit: 85  # Celsius
+  power_limit: 320  # Watts (RTX 4080 TDP)
+
+# CUDA settings
+cuda:
+  version: "12.1"
+  cudnn_version: "8.9"
+  nccl_version: "2.18"
+
+  # Environment variables
+  env:
+    CUDA_VISIBLE_DEVICES: "0"
+    CUDA_LAUNCH_BLOCKING: "0"
+    CUDA_DEVICE_ORDER: "PCI_BUS_ID"
+    TF_FORCE_GPU_ALLOW_GROWTH: "true"
+    TF_GPU_ALLOCATOR: "cuda_malloc_async"
+    PYTORCH_CUDA_ALLOC_CONF: "max_split_size_mb:512"
+
+# Profiling
+profiling:
+  enabled: false
+  trace_activities: ["cpu", "cuda"]
+  record_shapes: true
+  profile_memory: true
+  with_stack: true
+
+# Benchmarking
+benchmark:
+  warmup_iterations: 10
+  benchmark_iterations: 100
+  batch_sizes: [1, 4, 8, 16, 32]
+  sequence_lengths: [128, 256, 512, 1024, 2048]

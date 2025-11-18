@@ -1,0 +1,91 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'agentic-cluster'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Rule files
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'
+
+  # Code Generation Service
+  - job_name: 'code-generation'
+    static_configs:
+      - targets: ['code-generation:8000']
+    metrics_path: '/metrics'
+
+  # Automated Testing Service
+  - job_name: 'automated-testing'
+    static_configs:
+      - targets: ['automated-testing:8000']
+    metrics_path: '/metrics'
+
+  # Project Management Service
+  - job_name: 'project-management'
+    static_configs:
+      - targets: ['project-management:8000']
+    metrics_path: '/metrics'
+
+  # Documentation Service
+  - job_name: 'documentation'
+    static_configs:
+      - targets: ['documentation:8000']
+    metrics_path: '/metrics'
+
+  # Collaboration Service
+  - job_name: 'collaboration'
+    static_configs:
+      - targets: ['collaboration:8000']
+    metrics_path: '/metrics'
+
+  # Self-Improvement Service
+  - job_name: 'self-improvement'
+    static_configs:
+      - targets: ['self-improvement:8000']
+    metrics_path: '/metrics'
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # Kafka
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+
+  # Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # GPU Metrics (NVIDIA DCGM Exporter - optional)
+  # - job_name: 'dcgm-exporter'
+  #   static_configs:
+  #     - targets: ['dcgm-exporter:9400']

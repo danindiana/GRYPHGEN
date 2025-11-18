@@ -1,0 +1,372 @@
+version: '3.8'
+
+# Network configuration
+networks:
+  agentic_network:
+    driver: bridge
+
+# Volume configuration for persistent data
+volumes:
+  postgres_data:
+  minio_data:
+  kafka_data:
+  zookeeper_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+  # ============================================================================
+  # Infrastructure Services
+  # ============================================================================
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentic_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agentic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentic_password}
+      POSTGRES_DB: ${POSTGRES_DB:-agentic_db}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - agentic_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: agentic_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - agentic_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    container_name: agentic_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    ports:
+      - "2181:2181"
+    networks:
+      - agentic_network
+
+  # Apache Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    container_name: agentic_kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    ports:
+      - "29092:29092"
+    networks:
+      - agentic_network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kafka UI
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: agentic_kafka_ui
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: agentic-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - "8080:8080"
+    networks:
+      - agentic_network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: agentic_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    networks:
+      - agentic_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ============================================================================
+  # Microservices
+  # ============================================================================
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api-gateway
+    container_name: agentic_api_gateway
+    environment:
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "8000:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Code Generation Service
+  code-generation:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.code-generation
+    container_name: agentic_code_generation
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - MINIO_ENDPOINT=minio:9000
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8001:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+      - minio
+    restart: unless-stopped
+
+  # Automated Testing Service
+  automated-testing:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.automated-testing
+    container_name: agentic_automated_testing
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - MINIO_ENDPOINT=minio:9000
+    ports:
+      - "8002:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+      - minio
+    restart: unless-stopped
+
+  # Project Management Service
+  project-management:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.project-management
+    container_name: agentic_project_management
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8003:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+
+  # Documentation Service
+  documentation:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.documentation
+    container_name: agentic_documentation
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - MINIO_ENDPOINT=minio:9000
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8004:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+      - minio
+    restart: unless-stopped
+
+  # Collaboration Service
+  collaboration:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.collaboration
+    container_name: agentic_collaboration
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8005:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+
+  # Self-Improvement Service
+  self-improvement:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.self-improvement
+    container_name: agentic_self_improvement
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://agentic:agentic_password@postgres:5432/agentic_db
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8006:8000"
+    networks:
+      - agentic_network
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+
+  # ============================================================================
+  # Monitoring & Observability
+  # ============================================================================
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agentic_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - agentic_network
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agentic_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./configs/grafana/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3000:3000"
+    networks:
+      - agentic_network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Node Exporter (for system metrics)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: agentic_node_exporter
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+    ports:
+      - "9100:9100"
+    networks:
+      - agentic_network
+    restart: unless-stopped
