@@ -1,0 +1,27 @@
+# Documentation Service with GPU support
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+RUN apt-get update && apt-get install -y \
+    python3.11 python3.11-dev python3-pip curl build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch==2.2.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY src/ ./src/
+COPY configs/ ./configs/
+
+RUN mkdir -p logs
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["python", "-m", "uvicorn", "src.services.documentation.main:app", "--host", "0.0.0.0", "--port", "8000"]
