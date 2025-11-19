@@ -1,0 +1,134 @@
+name: Perl Pipes CI
+
+on:
+  push:
+    branches: [ main, develop, claude/* ]
+    paths:
+      - 'perl_pipes/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'perl_pipes/**'
+
+jobs:
+  test:
+    name: Test on Perl ${{ matrix.perl-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        perl-version: ['5.36', '5.38', 'latest']
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl-version }}
+
+    - name: Install cpanminus
+      run: |
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        cpanm --version
+
+    - name: Cache CPAN modules
+      uses: actions/cache@v3
+      with:
+        path: ~/perl5
+        key: ${{ runner.os }}-perl-${{ matrix.perl-version }}-${{ hashFiles('perl_pipes/cpanfile') }}
+        restore-keys: |
+          ${{ runner.os }}-perl-${{ matrix.perl-version }}-
+
+    - name: Install dependencies
+      working-directory: perl_pipes
+      run: |
+        cpanm --quiet --notest --installdeps .
+
+    - name: Check Perl syntax
+      working-directory: perl_pipes
+      run: |
+        find bin -name '*.pl' -exec perl -c {} \;
+
+    - name: Run tests
+      working-directory: perl_pipes
+      run: |
+        prove -lr tests/
+
+    - name: Test script help
+      working-directory: perl_pipes
+      run: |
+        ./bin/model1_comm.pl --help
+        ./bin/model2_comm.pl --help
+        ./bin/find_gguf_files.pl --help
+        ./bin/setup_pipes.sh --help
+        ./bin/cleanup_pipes.sh --help
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: 'latest'
+
+    - name: Install Perl::Critic
+      run: cpanm --quiet Perl::Critic
+
+    - name: Run Perl::Critic
+      working-directory: perl_pipes
+      run: |
+        perlcritic bin/ || true
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      working-directory: perl_pipes
+      run: |
+        docker build -t gryphgen/perl-pipes:test .
+
+    - name: Test Docker image
+      run: |
+        docker run --rm gryphgen/perl-pipes:test perl -v
+        docker run --rm gryphgen/perl-pipes:test ls -la /opt/gryphgen/perl_pipes/bin/
+
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: 'latest'
+
+    - name: Install dependencies
+      working-directory: perl_pipes
+      run: |
+        cpanm --quiet --notest --installdeps .
+        cpanm --quiet Devel::Cover
+
+    - name: Run tests with coverage
+      working-directory: perl_pipes
+      run: |
+        PERL5OPT=-MDevel::Cover prove -lr tests/ || true
+        cover -report text || true

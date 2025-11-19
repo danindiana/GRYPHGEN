@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # Main IPC service
+  perl-pipes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gryphgen/perl-pipes:latest
+    container_name: gryphgen-perl-pipes
+    hostname: gryphgen-ipc
+
+    # GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    # Environment variables
+    environment:
+      - PIPE_DIR=/tmp/gryphgen
+      - PIPE_PREFIX=model
+      - PIPE_TIMEOUT=30
+      - LOG_FILE=/opt/gryphgen/perl_pipes/logs/main.log
+      - NVIDIA_VISIBLE_DEVICES=all
+
+    # Volumes
+    volumes:
+      # Persist logs
+      - ./logs:/opt/gryphgen/perl_pipes/logs
+      # Model directory (adjust path as needed)
+      - ${HOME}/models:/mnt/models:ro
+      # Shared memory for high-performance pipes
+      - type: tmpfs
+        target: /tmp/gryphgen
+        tmpfs:
+          size: 100M
+
+    # Network
+    network_mode: bridge
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Resource limits
+    mem_limit: 4g
+    memswap_limit: 4g
+    cpu_count: 8
+
+    # Restart policy
+    restart: unless-stopped
+
+  # Model 1 Service (Example)
+  model1:
+    image: gryphgen/perl-pipes:latest
+    container_name: gryphgen-model1
+    depends_on:
+      - perl-pipes
+
+    environment:
+      - PIPE_TO_MODEL2=/tmp/gryphgen/model1_to_model2
+      - PIPE_FROM_MODEL2=/tmp/gryphgen/model2_to_model1
+
+    volumes:
+      - ./logs:/opt/gryphgen/perl_pipes/logs
+
+    volumes_from:
+      - perl-pipes
+
+    command: tail -f /dev/null
+
+  # Model 2 Service (Example)
+  model2:
+    image: gryphgen/perl-pipes:latest
+    container_name: gryphgen-model2
+    depends_on:
+      - perl-pipes
+
+    environment:
+      - PIPE_TO_MODEL1=/tmp/gryphgen/model2_to_model1
+      - PIPE_FROM_MODEL1=/tmp/gryphgen/model1_to_model2
+
+    volumes:
+      - ./logs:/opt/gryphgen/perl_pipes/logs
+
+    volumes_from:
+      - perl-pipes
+
+    command: tail -f /dev/null
+
+# Optional: monitoring service
+  monitoring:
+    image: gryphgen/perl-pipes:latest
+    container_name: gryphgen-monitoring
+    depends_on:
+      - perl-pipes
+
+    volumes:
+      - ./logs:/opt/gryphgen/perl_pipes/logs
+      - ${HOME}/models:/mnt/models:ro
+
+    command: >
+      bash -c "
+        while true; do
+          echo '=== GPU Status ===' &&
+          nvidia-smi --query-gpu=timestamp,name,temperature.gpu,utilization.gpu,memory.used,memory.total --format=csv &&
+          echo &&
+          sleep 10
+        done
+      "
+
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
+    name: gryphgen-network
