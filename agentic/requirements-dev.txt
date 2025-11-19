@@ -1,0 +1,108 @@
+# Development Requirements
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+pytest-xdist==3.6.1  # Parallel test execution
+pytest-benchmark==5.1.0  # Performance benchmarking
+pytest-timeout==2.3.1  # Test timeout
+hypothesis==6.122.3  # Property-based testing
+faker==33.1.0  # Test data generation
+factory-boy==3.3.1  # Test fixtures
+freezegun==1.5.1  # Time mocking
+responses==0.25.3  # HTTP mocking
+
+# Code Quality
+black==24.10.0
+isort==5.13.2
+flake8==7.1.1
+flake8-docstrings==1.7.0
+flake8-bugbear==24.10.31
+flake8-comprehensions==3.16.0
+flake8-simplify==0.21.0
+mypy==1.13.0
+pylint==3.3.2
+bandit==1.8.0  # Security linting
+safety==3.2.11  # Dependency security check
+radon==6.0.1  # Code complexity metrics
+vulture==2.14  # Dead code detection
+
+# Pre-commit hooks
+pre-commit==4.0.1
+
+# Documentation
+mkdocs==1.6.1
+mkdocs-material==9.5.50
+mkdocstrings[python]==0.27.0
+mkdocs-autorefs==1.2.0
+mkdocs-include-markdown-plugin==7.1.3
+mkdocs-git-revision-date-localized-plugin==1.3.0
+pymdown-extensions==10.12
+
+# Development Tools
+ipython==8.30.0
+ipdb==0.13.13  # IPython debugger
+jupyter==1.1.1
+notebook==7.3.2
+jupyterlab==4.3.3
+jupyter-contrib-nbextensions==0.7.0
+
+# Profiling & Performance
+py-spy==0.3.14
+memray==1.15.0
+scalene==1.5.48.1
+line-profiler==4.2.0
+memory-profiler==0.61.0
+snakeviz==2.2.2  # Profile visualization
+pyinstrument==5.0.0  # Statistical profiler
+
+# API Testing
+httpie==3.2.4
+locust==2.32.4  # Load testing
+tavern==2.11.0  # API testing framework
+
+# Database Tools
+alembic==1.14.0  # Database migrations
+pgcli==4.1.0  # PostgreSQL CLI with autocomplete
+redis-cli==0.7.1  # Redis CLI
+
+# Docker & Container Tools
+docker==7.1.0
+docker-compose==1.29.2
+
+# Type Stubs
+types-requests==2.32.0.20241016
+types-redis==4.6.0.20241004
+types-pyyaml==6.0.12.20240917
+types-toml==0.10.8.20240310
+
+# Code Coverage
+coverage[toml]==7.6.9
+codecov==2.1.13
+
+# Build Tools
+build==1.2.2.post1
+wheel==0.45.1
+twine==6.0.1  # PyPI uploads
+
+# Debugging
+debugpy==1.8.9
+icecream==2.1.3  # Better print debugging
+better-exceptions==0.3.3
+
+# Performance monitoring
+psutil==6.1.1
+gputil==1.4.0  # GPU monitoring
+
+# Continuous Integration
+tox==4.23.2  # Test automation
+nox==2024.10.9  # Task automation
+
+# Additional Development Utilities
+watchdog==6.0.0  # File system monitoring
+python-dateutil==2.9.0.post0
+colorama==0.4.6  # Colored terminal output
+tabulate==0.9.0  # Pretty tables

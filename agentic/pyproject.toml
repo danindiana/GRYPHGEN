@@ -33,42 +33,82 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastapi>=0.109.2",
-    "uvicorn[standard]>=0.27.1",
-    "pydantic>=2.6.1",
-    "torch>=2.2.0",
-    "transformers>=4.37.2",
-    "openai>=1.12.0",
-    "anthropic>=0.8.1",
+    "fastapi>=0.115.5",
+    "uvicorn[standard]>=0.32.1",
+    "pydantic>=2.10.3",
+    "pydantic-settings>=2.6.1",
+    "torch>=2.5.1",
+    "transformers>=4.46.3",
+    "openai>=1.57.2",
+    "anthropic>=0.42.0",
     "kafka-python>=2.0.2",
-    "asyncpg>=0.29.0",
-    "prometheus-client>=0.19.0",
-    "loguru>=0.7.2",
-    "click>=8.1.7",
+    "asyncpg>=0.30.0",
+    "sqlalchemy>=2.0.36",
+    "prometheus-client>=0.21.0",
+    "prometheus-fastapi-instrumentator>=7.0.0",
+    "loguru>=0.7.3",
+    "click>=8.1.8",
+    "httpx>=0.28.1",
+    "aiofiles>=24.1.0",
+    "tiktoken>=0.8.0",
+    "einops>=0.8.0",
+    "safetensors>=0.4.5",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.4",
-    "pytest-cov>=4.1.0",
-    "black>=24.1.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-xdist>=3.6.1",
+    "black>=24.10.0",
     "isort>=5.13.2",
-    "flake8>=7.0.0",
-    "mypy>=1.8.0",
-    "pre-commit>=3.6.0",
+    "flake8>=7.1.1",
+    "mypy>=1.13.0",
+    "pylint>=3.3.2",
+    "pre-commit>=4.0.1",
+    "bandit>=1.8.0",
+    "safety>=3.2.11",
+    "ipython>=8.30.0",
+    "ipdb>=0.13.13",
 ]
 
 docs = [
-    "mkdocs>=1.5.3",
-    "mkdocs-material>=9.5.7",
-    "mkdocstrings[python]>=0.24.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.5.50",
+    "mkdocstrings[python]>=0.27.0",
+    "mkdocs-autorefs>=1.2.0",
+    "pymdown-extensions>=10.12",
 ]
 
 gpu = [
-    "torch[cuda121]>=2.2.0",
-    "cupy-cuda12x>=13.0.0",
-    "nvidia-ml-py>=12.535.133",
+    "cupy-cuda12x>=13.3.0",
+    "nvidia-ml-py>=12.560.30",
+    "pynvml>=11.5.3",
+]
+
+ml = [
+    "accelerate>=1.2.1",
+    "bitsandbytes>=0.45.0",
+    "sentence-transformers>=3.3.1",
+    "pytorch-lightning>=2.4.0",
+    "tensorboard>=2.18.0",
+    "wandb>=0.18.7",
+]
+
+rl = [
+    "gymnasium>=1.0.0",
+    "stable-baselines3>=2.4.0",
+    "ray[rllib]>=2.39.0",
+]
+
+nlp = [
+    "spacy>=3.8.2",
+    "nltk>=3.9.1",
+    "langchain>=0.3.13",
+    "langchain-openai>=0.2.14",
+    "llama-index>=0.12.11",
 ]
 
 all = [

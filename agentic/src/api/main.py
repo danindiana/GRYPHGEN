@@ -90,10 +90,43 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 # Import and include routers
-# from .routers import code_generation, testing, documentation
-# app.include_router(code_generation.router, prefix="/api/v1/code", tags=["code"])
-# app.include_router(testing.router, prefix="/api/v1/test", tags=["testing"])
-# app.include_router(documentation.router, prefix="/api/v1/docs", tags=["documentation"])
+from ..services.code_generation import router as code_generation_router
+from ..services.automated_testing import router as testing_router
+from ..services.project_management import router as project_mgmt_router
+from ..services.documentation import router as docs_router
+from ..services.collaboration import router as collab_router
+from ..services.self_improvement import router as improvement_router
+
+app.include_router(
+    code_generation_router,
+    prefix="/api/v1/code",
+    tags=["Code Generation"],
+)
+app.include_router(
+    testing_router,
+    prefix="/api/v1/test",
+    tags=["Automated Testing"],
+)
+app.include_router(
+    project_mgmt_router,
+    prefix="/api/v1/project",
+    tags=["Project Management"],
+)
+app.include_router(
+    docs_router,
+    prefix="/api/v1/docs",
+    tags=["Documentation"],
+)
+app.include_router(
+    collab_router,
+    prefix="/api/v1/collaboration",
+    tags=["Collaboration"],
+)
+app.include_router(
+    improvement_router,
+    prefix="/api/v1/improve",
+    tags=["Self-Improvement"],
+)
 
 
 if __name__ == "__main__":
