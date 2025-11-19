@@ -1,0 +1,64 @@
+# Perl Pipes .gitignore
+
+# Logs
+logs/*.log
+*.log
+
+# Perl temporary files
+*.bak
+*~
+*.swp
+*.swo
+
+# Coverage reports
+cover_db/
+*.gcov
+*.gcda
+*.gcno
+
+# Perl build artifacts
+blib/
+pm_to_blib
+MYMETA.*
+Makefile.old
+
+# cpanm build files
+.build/
+local/
+
+# Perl::Tidy backup files
+*.tdy
+
+# Test output
+test-output/
+*.tap
+
+# Named pipes (should not be committed)
+/tmp/model*_to_*
+*.fifo
+
+# Environment
+.env
+.env.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+
+# Documentation build files
+docs/*.html
+docs/man/
+pod2htmd.tmp
+pod2htmi.tmp
+
+# Docker volumes
+docker-volumes/
+
+# Temporary model files
+*.gguf.tmp
+*.download
+
+# OS specific
+Thumbs.db

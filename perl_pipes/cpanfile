@@ -1,0 +1,51 @@
+# Perl Dependencies for GRYPHGEN Multi-Model IPC
+# Install with: cpanm --installdeps .
+
+requires 'perl', '>= 5.36.0';
+
+# Core modules (may need to be installed depending on Perl version)
+requires 'File::Find';
+requires 'File::stat';
+requires 'Getopt::Long';
+requires 'Time::HiRes';
+requires 'POSIX';
+requires 'FindBin';
+requires 'autodie';
+
+# Additional modules for enhanced functionality
+requires 'JSON::PP';           # JSON output for find_gguf_files.pl
+requires 'Config::Tiny';       # Configuration file support
+requires 'Log::Log4perl';      # Advanced logging
+requires 'Try::Tiny';          # Modern error handling
+requires 'Path::Tiny';         # Modern file path handling
+requires 'IPC::Run';           # Advanced IPC capabilities
+requires 'Parallel::ForkManager'; # Parallel processing support
+
+# Development and testing dependencies
+on 'test' => sub {
+    requires 'Test::More', '>= 1.302';
+    requires 'Test::Exception';
+    requires 'Test::Output';
+    requires 'Test::File';
+    requires 'Test::MockModule';
+    requires 'Test::Warnings';
+    requires 'Devel::Cover';    # Code coverage
+};
+
+on 'develop' => sub {
+    requires 'Perl::Critic';     # Code quality
+    requires 'Perl::Tidy';       # Code formatting
+    requires 'Pod::Checker';     # Documentation validation
+    requires 'Devel::NYTProf';   # Profiling
+};
+
+# Feature-specific dependencies
+feature 'monitoring', 'Advanced monitoring and metrics' => sub {
+    requires 'Sys::Statistics::Linux';
+    requires 'Nvidia::ML';       # NVIDIA GPU monitoring
+};
+
+feature 'web', 'Web-based dashboard' => sub {
+    requires 'Mojolicious';
+    requires 'Mojolicious::Plugin::OpenAPI';
+};
