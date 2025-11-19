@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  # GRYPHGEN LLM Service
+  gryphgen-llm:
+    image: gryphgen-llm:latest
+    container_name: gryphgen-llm
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.llm
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - HF_HOME=/models/gryphgen/cache
+      - TRANSFORMERS_CACHE=/models/gryphgen/cache
+      - GRYPHGEN_HOME=/opt/gryphgen
+      - GRYPHGEN_DATA=/data/gryphgen
+      - GRYPHGEN_MODELS=/models/gryphgen
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - gryphgen-models:/models/gryphgen
+      - gryphgen-data:/data/gryphgen
+      - gryphgen-logs:/var/log/gryphgen
+      - ./configs:/opt/gryphgen/configs:ro
+    ports:
+      - "8000:8000"   # FastAPI
+      - "8888:8888"   # Jupyter
+      - "8080:8080"   # Alternative HTTP
+      - "6006:6006"   # TensorBoard
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import torch; assert torch.cuda.is_available()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: gryphgen-postgres
+    environment:
+      - POSTGRES_DB=gryphgen
+      - POSTGRES_USER=gryphgen
+      - POSTGRES_PASSWORD=gryphgen_secure_password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gryphgen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB
+  mongodb:
+    image: mongo:7-jammy
+    container_name: gryphgen-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=gryphgen
+      - MONGO_INITDB_ROOT_PASSWORD=gryphgen_secure_password
+      - MONGO_INITDB_DATABASE=gryphgen
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: gryphgen-redis
+    command: redis-server --appendonly yes --requirepass gryphgen_secure_password
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ChromaDB Vector Database
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: gryphgen-chromadb
+    environment:
+      - CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.token.TokenConfigServerAuthCredentialsProvider
+      - CHROMA_SERVER_AUTH_CREDENTIALS=gryphgen_token
+      - CHROMA_SERVER_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+    volumes:
+      - chromadb-data:/chroma/chroma
+    ports:
+      - "8100:8000"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gryphgen-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gryphgen-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=gryphgen_admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - gryphgen-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  gryphgen-models:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /models/gryphgen
+
+  gryphgen-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/gryphgen
+
+  gryphgen-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/gryphgen
+
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  chromadb-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  gryphgen-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
