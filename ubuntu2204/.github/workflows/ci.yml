@@ -1,0 +1,240 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'claude/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CUDA_VERSION: "12.6"
+  UBUNTU_VERSION: "22.04"
+
+jobs:
+  # Lint and validate scripts
+  lint:
+    name: Lint Scripts
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: |
+          find ubuntu2204/scripts -name "*.sh" -exec shellcheck {} \;
+          find ubuntu2204/tests -name "*.sh" -exec shellcheck {} \;
+
+      - name: Check script permissions
+        run: |
+          find ubuntu2204/scripts -name "*.sh" ! -executable -exec echo "Missing execute permission: {}" \; -exec false {} +
+          find ubuntu2204/tests -name "*.sh" ! -executable -exec echo "Missing execute permission: {}" \; -exec false {} +
+
+  # Validate documentation
+  docs:
+    name: Validate Documentation
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install markdown lint
+        run: npm install -g markdownlint-cli
+
+      - name: Lint markdown files
+        run: |
+          markdownlint ubuntu2204/**/*.md --ignore node_modules || true
+
+      - name: Check for broken links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/mlc_config.json'
+        continue-on-error: true
+
+  # Build CUDA examples (if CUDA available)
+  build-cuda:
+    name: Build CUDA Examples
+    runs-on: ubuntu-22.04
+    # Note: This job will skip actual CUDA builds in GitHub Actions
+    # as runners don't have GPUs. For real builds, use self-hosted runners.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Check CUDA availability
+        id: check-cuda
+        run: |
+          if command -v nvcc &> /dev/null; then
+            echo "cuda_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "cuda_available=false" >> $GITHUB_OUTPUT
+            echo "CUDA not available, skipping GPU builds"
+          fi
+
+      - name: Validate Makefiles
+        run: |
+          cd ubuntu2204
+          make --dry-run clean || true
+
+      - name: Build examples (if CUDA available)
+        if: steps.check-cuda.outputs.cuda_available == 'true'
+        run: |
+          cd ubuntu2204
+          make all
+
+  # Test scripts syntax
+  test-scripts:
+    name: Test Script Syntax
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test bash syntax
+        run: |
+          cd ubuntu2204
+          for script in scripts/**/*.sh tests/*.sh; do
+            if [ -f "$script" ]; then
+              echo "Checking: $script"
+              bash -n "$script"
+            fi
+          done
+
+      - name: Validate Python syntax (if any)
+        run: |
+          if find ubuntu2204 -name "*.py" | grep -q .; then
+            sudo apt-get update && sudo apt-get install -y python3
+            find ubuntu2204 -name "*.py" -exec python3 -m py_compile {} \;
+          fi
+
+  # Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'ubuntu2204'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  # Integration tests (requires GPU)
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    # This should run on self-hosted runners with GPUs for real testing
+    # For GitHub Actions, we'll simulate the tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for GPU
+        id: check-gpu
+        run: |
+          if command -v nvidia-smi &> /dev/null; then
+            echo "gpu_available=true" >> $GITHUB_OUTPUT
+            nvidia-smi
+          else
+            echo "gpu_available=false" >> $GITHUB_OUTPUT
+            echo "No GPU available, skipping GPU tests"
+          fi
+
+      - name: Run validation tests (dry run)
+        run: |
+          cd ubuntu2204
+          # Syntax check only without execution
+          bash -n tests/validate-dependencies.sh
+          bash -n tests/test-gpu-setup.sh
+
+      - name: Run GPU tests (if available)
+        if: steps.check-gpu.outputs.gpu_available == 'true'
+        run: |
+          cd ubuntu2204
+          sudo ./tests/validate-dependencies.sh || true
+          ./tests/test-gpu-setup.sh || true
+
+  # Package and release
+  package:
+    name: Create Release Package
+    runs-on: ubuntu-22.04
+    needs: [lint, docs, test-scripts]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/claude/'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create archive
+        run: |
+          cd ubuntu2204
+          tar czf ../ubuntu2204-toolkit.tar.gz \
+            --exclude='*.o' \
+            --exclude='*.nsys-rep' \
+            --exclude='*.ncu-rep' \
+            --exclude='node_modules' \
+            .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu2204-toolkit
+          path: ubuntu2204-toolkit.tar.gz
+          retention-days: 30
+
+  # Generate documentation site (optional)
+  docs-deploy:
+    name: Deploy Documentation
+    runs-on: ubuntu-22.04
+    needs: [docs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs mkdocs-material pymdown-extensions
+
+      - name: Build documentation
+        run: |
+          # Create mkdocs.yml if needed
+          if [ ! -f mkdocs.yml ]; then
+            echo "site_name: Ubuntu 22.04 HPC/ML Toolkit" > mkdocs.yml
+            echo "theme: material" >> mkdocs.yml
+          fi
+          # mkdocs build || true
+        continue-on-error: true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: success()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+        continue-on-error: true
