@@ -1,0 +1,73 @@
+# Prometheus Configuration for GRYPHGEN
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'gryphgen'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # GRYPHGEN main metrics
+  - job_name: 'gryphgen'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          component: 'main'
+
+  # Orchestrator metrics
+  - job_name: 'orchestrator'
+    static_configs:
+      - targets: ['orchestrator:5555']
+        labels:
+          component: 'orchestrator'
+          layer: 'symorq'
+
+  # Scheduler metrics
+  - job_name: 'scheduler'
+    static_configs:
+      - targets: ['scheduler:5556']
+        labels:
+          component: 'scheduler'
+          layer: 'symorg'
+
+  # Worker metrics
+  - job_name: 'workers'
+    static_configs:
+      - targets: ['worker:5557']
+        labels:
+          component: 'worker'
+          layer: 'symaug'
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          component: 'redis'
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          component: 'node_exporter'
+
+  # NVIDIA GPU metrics (if dcgm-exporter is running)
+  - job_name: 'gpu'
+    static_configs:
+      - targets: ['localhost:9400']
+        labels:
+          component: 'gpu'
+          device: 'rtx4080'

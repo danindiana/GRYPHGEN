@@ -1,0 +1,80 @@
+# GRYPHGEN Configuration Example
+# Copy this file to config.yml and customize as needed
+
+# Application Settings
+app_name: GRYPHGEN
+version: 2.0.0
+debug: false
+log_level: INFO
+
+# GPU Configuration
+gpu:
+  enabled: true
+  device_id: 0
+  memory_fraction: 0.85  # Use 85% of GPU memory
+  allow_growth: true
+
+# ZeroMQ Messaging Configuration
+zeromq:
+  orchestrator_port: 5555
+  scheduler_port: 5556
+  worker_port: 5557
+  pub_port: 5558
+  sub_port: 5559
+
+# Redis State Management
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  password: null
+
+# LLM Configuration for Orchestration
+llm:
+  provider: openai  # Options: openai, anthropic, local
+  model: gpt-4-turbo-preview
+  api_key: null  # Set via GRYPHGEN_LLM_API_KEY environment variable
+  temperature: 0.7
+  max_tokens: 2048
+
+# Resource Management
+resources:
+  max_cpu_percent: 80.0
+  max_memory_percent: 80.0
+  max_gpu_memory_percent: 90.0
+  min_free_disk_gb: 10.0
+
+# Monitoring and Metrics
+monitoring:
+  enabled: true
+  prometheus_port: 9090
+  metrics_interval: 30  # seconds
+  log_level: INFO
+
+# Paths
+data_dir: ./data
+logs_dir: ./logs
+cache_dir: ./cache
+
+# Scheduler Settings
+scheduler:
+  max_concurrent_tasks: 10
+  default_priority: 1
+  task_timeout: 3600  # seconds
+  enable_optimization: true
+
+# Deployment Settings
+deployment:
+  default_replicas: 1
+  auto_scaling: true
+  min_replicas: 1
+  max_replicas: 10
+  scale_up_threshold: 0.8
+  scale_down_threshold: 0.3
+
+# Docker Settings
+docker:
+  registry: null
+  namespace: gryphgen
+  pull_policy: IfNotPresent
+  stop_services_on_shutdown: false

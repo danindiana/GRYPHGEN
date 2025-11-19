@@ -1,0 +1,64 @@
+# GRYPHGEN Example Project Configuration
+
+name: ml_pipeline_example
+description: Example ML pipeline demonstrating GRYPHGEN capabilities
+
+# Task definitions
+tasks:
+  preprocess:
+    name: Data Preprocessing
+    module: tasks.preprocess
+    resources:
+      cpu: 4.0
+      memory: 8589934592  # 8GB in bytes
+    priority: high
+    estimated_duration: 300  # seconds
+    dependencies: []
+
+  train:
+    name: Model Training
+    module: tasks.train
+    resources:
+      cpu: 2.0
+      memory: 17179869184  # 16GB
+      gpu_0: 12884901888   # 12GB GPU memory
+    priority: critical
+    estimated_duration: 1800  # 30 minutes
+    dependencies:
+      - preprocess
+
+  evaluate:
+    name: Model Evaluation
+    module: tasks.evaluate
+    resources:
+      cpu: 1.0
+      memory: 4294967296   # 4GB
+      gpu_0: 4294967296    # 4GB GPU memory
+    priority: high
+    estimated_duration: 300
+    dependencies:
+      - train
+
+# Default resource limits
+resource_limits:
+  max_cpu: 8.0
+  max_memory: 34359738368  # 32GB
+  max_gpu_memory: 17179869184  # 16GB
+
+# Execution settings
+execution:
+  parallel_tasks: 2
+  retry_on_failure: true
+  max_retries: 3
+  timeout: 7200  # 2 hours
+
+# Data paths
+data:
+  input_dir: ./data/input
+  output_dir: ./data/output
+  checkpoint_dir: ./data/checkpoints
+
+# Logging
+logging:
+  level: INFO
+  log_dir: ./logs
