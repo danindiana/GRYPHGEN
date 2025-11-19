@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gryphgen-agentic
+  labels:
+    app: gryphgen-agentic
+    environment: production

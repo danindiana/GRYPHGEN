@@ -96,7 +96,9 @@ from ..services.project_management import router as project_mgmt_router
 from ..services.documentation import router as docs_router
 from ..services.collaboration import router as collab_router
 from ..services.self_improvement import router as improvement_router
+from ..websockets import websocket_router
 
+# Include service routers
 app.include_router(
     code_generation_router,
     prefix="/api/v1/code",
@@ -126,6 +128,12 @@ app.include_router(
     improvement_router,
     prefix="/api/v1/improve",
     tags=["Self-Improvement"],
+)
+
+# Include WebSocket router
+app.include_router(
+    websocket_router,
+    tags=["WebSocket"],
 )
 
 

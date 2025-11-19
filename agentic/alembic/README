@@ -1,0 +1,66 @@
+# Alembic Database Migrations
+
+This directory contains Alembic database migration scripts for GRYPHGEN Agentic.
+
+## Usage
+
+### Create a new migration
+
+```bash
+# Auto-generate migration from model changes
+alembic revision --autogenerate -m "Add new table"
+
+# Create empty migration
+alembic revision -m "Add new index"
+```
+
+### Apply migrations
+
+```bash
+# Upgrade to latest version
+alembic upgrade head
+
+# Upgrade to specific version
+alembic upgrade <revision>
+
+# Downgrade one version
+alembic downgrade -1
+
+# Downgrade to specific version
+alembic downgrade <revision>
+```
+
+### View migration history
+
+```bash
+# Show current version
+alembic current
+
+# Show migration history
+alembic history --verbose
+```
+
+## Initial Setup
+
+1. Ensure PostgreSQL is running:
+   ```bash
+   docker-compose up -d postgres
+   ```
+
+2. Create initial migration:
+   ```bash
+   alembic revision --autogenerate -m "Initial schema"
+   ```
+
+3. Apply migration:
+   ```bash
+   alembic upgrade head
+   ```
+
+## Best Practices
+
+1. Always review auto-generated migrations before applying
+2. Test migrations in development before production
+3. Keep migrations small and focused
+4. Never edit applied migrations
+5. Always provide descriptive migration messages
