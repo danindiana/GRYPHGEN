@@ -1,0 +1,79 @@
+# ShellGenie Configuration File
+# Place this file at ~/.shellgenie/config.yaml or specify with --config flag
+
+# Model Configuration
+model:
+  # Backend to use: ollama, llama_cpp, or openai_compatible
+  backend: ollama
+
+  # Model name (for Ollama) or path (for llama.cpp)
+  model_name: llama3.2
+
+  # For llama.cpp: path to .gguf model file
+  # model_path: /path/to/model.gguf
+
+  # API base URL (for Ollama or OpenAI-compatible)
+  api_base: http://localhost:11434
+
+  # API key (if required)
+  # api_key: your_api_key_here
+
+  # Generation parameters
+  temperature: 0.7        # Creativity (0.0-2.0)
+  max_tokens: 512         # Maximum tokens to generate
+  context_length: 8192    # Context window size
+
+  # GPU configuration
+  gpu_layers: -1          # Number of layers to offload to GPU (-1 = all)
+  threads: 8              # Number of CPU threads
+  batch_size: 512         # Batch size for prompt processing
+
+# Application Settings
+app:
+  # Security level: strict, moderate, permissive, or disabled
+  security_level: moderate
+
+  # Auto-execute commands without confirmation (use with caution!)
+  auto_execute: false
+
+  # Logging configuration
+  log_level: INFO         # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_file: ~/.shellgenie/shellgenie.log
+
+  # Command history
+  history_file: ~/.shellgenie/history
+  max_history: 1000       # Maximum number of history entries
+
+  # Telemetry (anonymous usage statistics)
+  enable_telemetry: false
+
+  # Command execution timeout (seconds)
+  timeout: 300
+
+# Security Customization
+security:
+  # Additional commands to whitelist (always allow)
+  whitelist:
+    - ls
+    - cat
+    - echo
+    - pwd
+    - grep
+    - find
+
+  # Additional commands to blacklist (always block)
+  blacklist:
+    - mkfs
+    - dd
+    # Add more dangerous commands here
+
+# Advanced Options
+advanced:
+  # Enable experimental features
+  experimental: false
+
+  # Custom prompt template file
+  # prompt_template: ~/.shellgenie/prompts/custom.txt
+
+  # Enable debug mode
+  debug: false
