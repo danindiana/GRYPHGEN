@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-generation
+  namespace: gryphgen-agentic
+  labels:
+    app: code-generation
+    component: service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: code-generation
+  template:
+    metadata:
+      labels:
+        app: code-generation
+        component: service
+    spec:
+      containers:
+      - name: code-generation
+        image: ghcr.io/danindiana/gryphgen/code-generation:latest
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "code-generation"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: USE_GPU
+          value: "true"
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "16Gi"
+            cpu: "4"
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: model-cache
+          mountPath: /root/.cache/huggingface
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: model-cache-pvc
+      nodeSelector:
+        gpu: "nvidia-rtx-4080"
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-generation
+  namespace: gryphgen-agentic
+spec:
+  type: ClusterIP
+  selector:
+    app: code-generation
+  ports:
+  - port: 8001
+    targetPort: 8001
+    name: http
