@@ -1,0 +1,85 @@
+name: GPU Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  gpu-tests:
+    name: GPU Tests (Self-Hosted)
+    runs-on: self-hosted  # Requires self-hosted runner with RTX 4080
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[gpu]')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check GPU availability
+        run: |
+          nvidia-smi
+          python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A"}')"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run GPU Unit Tests
+        run: |
+          pytest tests/unit/ -v -m "gpu" --gpu
+
+      - name: Run GPU Integration Tests
+        run: |
+          pytest tests/integration/ -v -m "gpu and integration" --gpu
+
+      - name: GPU Memory Profiling
+        run: |
+          pytest tests/unit/test_gpu_utils.py -v -m "gpu" --profile
+
+      - name: Upload GPU test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpu-test-results
+          path: |
+            test-results/
+            coverage.xml
+
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: self-hosted
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[benchmark]')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run performance benchmarks
+        run: |
+          pytest tests/ -v -m "benchmark" --benchmark-only --benchmark-autosave
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: .benchmarks/
