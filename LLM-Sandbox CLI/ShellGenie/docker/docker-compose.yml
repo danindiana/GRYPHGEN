@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  shellgenie:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: shellgenie:2.0.0
+    container_name: shellgenie-dev
+    hostname: shellgenie
+
+    # GPU configuration for RTX 4080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1  # Use 1 GPU (RTX 4080)
+              capabilities: [gpu, compute, utility]
+
+    # Environment variables
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0  # Use first GPU
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OLLAMA_HOST=0.0.0.0:11434
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+
+      # GPU Memory optimization for RTX 4080 (16GB)
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - CUDA_LAUNCH_BLOCKING=0
+
+      # Model configuration
+      - SHELLGENIE_MODEL=llama3.2
+      - SHELLGENIE_BACKEND=ollama
+      - SHELLGENIE_SECURITY=moderate
+      - SHELLGENIE_LOG_LEVEL=INFO
+
+    # Volumes
+    volumes:
+      # Persist Ollama models
+      - ollama-data:/home/shellgenie/.ollama
+
+      # Persist ShellGenie config and history
+      - shellgenie-data:/home/shellgenie/.shellgenie
+
+      # Mount source code for development (optional - comment out for production)
+      - ../src:/home/shellgenie/shellgenie/src
+
+      # Share models directory with host
+      - ./models:/home/shellgenie/models
+
+    # Ports
+    ports:
+      - "11434:11434"  # Ollama API
+
+    # Resource limits (adjust based on your system)
+    mem_limit: 32g  # Allocate 32GB RAM
+    memswap_limit: 32g
+    shm_size: 8g  # Shared memory for GPU operations
+
+    # Enable all capabilities
+    cap_add:
+      - SYS_PTRACE
+
+    # Security options
+    security_opt:
+      - seccomp:unconfined
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network mode
+    networks:
+      - shellgenie-network
+
+  # Optional: Ollama standalone service (if you want separation)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: shellgenie-ollama
+    profiles:
+      - standalone  # Only start with: docker-compose --profile standalone up
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+
+    volumes:
+      - ollama-data:/root/.ollama
+
+    ports:
+      - "11434:11434"
+
+    networks:
+      - shellgenie-network
+
+    restart: unless-stopped
+
+volumes:
+  ollama-data:
+    driver: local
+  shellgenie-data:
+    driver: local
+
+networks:
+  shellgenie-network:
+    driver: bridge
