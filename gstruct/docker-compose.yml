@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Redis for state management
+  redis:
+    image: redis:7-alpine
+    container_name: gryphgen-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - gryphgen-network
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gryphgen-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - gryphgen-network
+
+  # GRYPHGEN Orchestrator
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: gryphgen-orchestrator
+    environment:
+      - GRYPHGEN_LOG_LEVEL=INFO
+      - GRYPHGEN_REDIS_HOST=redis
+      - GRYPHGEN_GPU_ENABLED=true
+    ports:
+      - "5555:5555"  # Command port
+      - "5558:5558"  # Pub port
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - gryphgen-network
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # GRYPHGEN Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: gryphgen-scheduler
+    environment:
+      - GRYPHGEN_LOG_LEVEL=INFO
+      - GRYPHGEN_REDIS_HOST=redis
+    ports:
+      - "5556:5556"  # Scheduler port
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - orchestrator
+    restart: unless-stopped
+    networks:
+      - gryphgen-network
+
+  # GRYPHGEN Worker (example)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      - GRYPHGEN_LOG_LEVEL=INFO
+      - GRYPHGEN_REDIS_HOST=redis
+      - GRYPHGEN_ORCHESTRATOR_HOST=orchestrator
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - orchestrator
+      - scheduler
+    restart: unless-stopped
+    networks:
+      - gryphgen-network
+    # Scale workers with: docker-compose up --scale worker=4
+    deploy:
+      replicas: 2
+
+networks:
+  gryphgen-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  prometheus_data:

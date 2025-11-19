@@ -1,0 +1,70 @@
+# GRYPHGEN - Grid Computing Framework Requirements
+# Updated for Python 3.11+ and CUDA 12.x support (RTX 4080)
+
+# Core Dependencies
+python>=3.11
+
+# Message Passing & Networking
+pyzmq>=25.1.2              # ZeroMQ for distributed messaging
+redis>=5.0.1               # Redis for state management
+aioredis>=2.0.1            # Async Redis client
+
+# GPU Computing (CUDA 12.x for RTX 4080)
+cupy-cuda12x>=13.0.0       # NumPy-compatible array library for GPU
+pycuda>=2024.1             # Python wrapper for CUDA
+numba>=0.59.0              # JIT compiler with CUDA support
+nvidia-ml-py>=12.535.133   # NVIDIA Management Library
+
+# ML & AI for LLM-based Orchestration
+torch>=2.2.0               # PyTorch with CUDA support
+transformers>=4.38.0       # HuggingFace transformers
+langchain>=0.1.0           # LLM orchestration framework
+openai>=1.12.0             # OpenAI API client
+anthropic>=0.18.0          # Anthropic Claude API client
+
+# Container & Orchestration
+docker>=7.0.0              # Docker SDK for Python
+kubernetes>=29.0.0         # Kubernetes client
+docker-compose>=1.29.2     # Docker Compose
+
+# Async & Concurrency
+asyncio>=3.4.3             # Async I/O
+aiohttp>=3.9.3             # Async HTTP client/server
+uvloop>=0.19.0             # Fast asyncio event loop
+
+# Data Processing
+numpy>=1.26.4              # Numerical computing
+pandas>=2.2.0              # Data manipulation
+scipy>=1.12.0              # Scientific computing
+networkx>=3.2.1            # Graph algorithms for RAG
+
+# Monitoring & Logging
+prometheus-client>=0.20.0  # Prometheus metrics
+psutil>=5.9.8              # System and process utilities
+loguru>=0.7.2              # Advanced logging
+rich>=13.7.0               # Rich terminal output
+
+# Configuration & Serialization
+pyyaml>=6.0.1              # YAML parser
+toml>=0.10.2               # TOML parser
+pydantic>=2.6.1            # Data validation
+python-dotenv>=1.0.1       # Environment variable management
+
+# API & Web
+fastapi>=0.109.2           # Modern web framework
+uvicorn>=0.27.1            # ASGI server
+pydantic-settings>=2.1.0   # Settings management
+
+# Testing & Development
+pytest>=8.0.0              # Testing framework
+pytest-asyncio>=0.23.5     # Async test support
+pytest-cov>=4.1.0          # Coverage plugin
+black>=24.2.0              # Code formatter
+ruff>=0.2.2                # Fast Python linter
+mypy>=1.8.0                # Static type checker
+
+# Utilities
+click>=8.1.7               # CLI framework
+tqdm>=4.66.2               # Progress bars
+schedule>=1.2.1            # Job scheduling
+tenacity>=8.2.3            # Retry library
