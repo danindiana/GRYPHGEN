@@ -1,0 +1,69 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+*.egg
+.pytest_cache
+.coverage
+htmlcov
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Documentation (except needed docs)
+*.md
+!README.md
+
+# Legacy files
+legacy/
+old/
+backup/
+
+# Large model files (download separately)
+*.bin
+*.safetensors
+*.gguf
+*.ggml
+models/*
+!models/.gitkeep
+
+# Data files
+data/*
+!data/.gitkeep
+
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# Docker
+docker-compose.override.yml
+.env.local

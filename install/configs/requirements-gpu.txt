@@ -1,0 +1,216 @@
+# GRYPHGEN GPU Requirements
+# Version: 2.0
+# Target: NVIDIA RTX 4080 16GB
+# CUDA: 12.6
+# Python: 3.11+
+
+# Include base requirements
+-r requirements.txt
+
+# ============================================================================
+# PyTorch Ecosystem (CUDA 12.6)
+# ============================================================================
+
+# PyTorch with CUDA 12.6 support
+--index-url https://download.pytorch.org/whl/cu126
+torch>=2.5.1
+torchvision>=0.20.1
+torchaudio>=2.5.1
+
+# PyTorch extensions
+xformers>=0.0.28
+einops>=0.8.0
+torchmetrics>=1.5.0
+
+# ============================================================================
+# Transformers and NLP
+# ============================================================================
+
+# Hugging Face ecosystem
+transformers>=4.50.0
+accelerate>=1.2.0
+datasets>=3.1.0
+tokenizers>=0.20.0
+sentencepiece>=0.2.0
+protobuf>=5.28.0
+
+# Quantization and optimization
+bitsandbytes>=0.45.0
+optimum>=1.23.0
+
+# Text generation
+text-generation>=0.8.0
+
+# ============================================================================
+# LLM Frameworks
+# ============================================================================
+
+# LangChain
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+langchain-core>=0.3.0
+langsmith>=0.2.0
+
+# LlamaIndex
+llama-index>=0.12.0
+llama-index-core>=0.12.0
+llama-index-llms-openai>=0.3.0
+llama-index-embeddings-huggingface>=0.4.0
+
+# Sentence transformers
+sentence-transformers>=3.3.0
+
+# ============================================================================
+# Vector Databases
+# ============================================================================
+
+# ChromaDB
+chromadb>=0.5.0
+
+# FAISS with GPU support
+faiss-gpu>=1.9.0
+
+# Milvus
+pymilvus>=2.4.0
+
+# Qdrant
+qdrant-client>=1.12.0
+
+# Weaviate
+weaviate-client>=4.9.0
+
+# Pinecone
+pinecone-client>=5.0.0
+
+# ============================================================================
+# Model Serving and Deployment
+# ============================================================================
+
+# vLLM for high-performance inference
+vllm>=0.6.0
+
+# TensorRT-LLM support
+tensorrt>=10.0.0
+
+# ============================================================================
+# RAG and Document Processing
+# ============================================================================
+
+# Document loaders
+pypdf>=5.1.0
+python-docx>=1.1.0
+python-pptx>=1.0.0
+openpyxl>=3.1.0
+markdown>=3.7.0
+
+# Text splitters
+tiktoken>=0.8.0
+spacy>=3.8.0
+
+# Embeddings
+openai>=1.55.0
+
+# ============================================================================
+# Audio and Multimodal
+# ============================================================================
+
+# Whisper for speech recognition
+openai-whisper>=20240930
+
+# Audio processing
+librosa>=0.10.0
+soundfile>=0.12.0
+
+# ============================================================================
+# Computer Vision
+# ============================================================================
+
+# OpenCV
+opencv-python>=4.10.0
+opencv-contrib-python>=4.10.0
+
+# Image processing
+pillow>=11.0.0
+imageio>=2.36.0
+
+# CLIP
+clip @ git+https://github.com/openai/CLIP.git
+
+# ============================================================================
+# Monitoring and Optimization
+# ============================================================================
+
+# TensorBoard
+tensorboard>=2.18.0
+tensorboardX>=2.6.0
+
+# Weights & Biases
+wandb>=0.18.0
+
+# MLflow
+mlflow>=2.17.0
+
+# Memory profiling
+memory-profiler>=0.61.0
+py3nvml>=0.2.7
+
+# ============================================================================
+# CUDA Utilities
+# ============================================================================
+
+# CUDA Python
+cuda-python>=12.6.0
+
+# cuDF for GPU-accelerated DataFrames (optional)
+# cudf-cu12>=24.10.0  # Uncomment if needed
+
+# CuPy for NumPy GPU arrays
+cupy-cuda12x>=13.3.0
+
+# ============================================================================
+# Specialized Libraries
+# ============================================================================
+
+# Graph neural networks
+torch-geometric>=2.6.0
+torch-scatter>=2.1.0
+torch-sparse>=0.6.0
+
+# Reinforcement learning
+gymnasium>=1.0.0
+
+# Diffusion models
+diffusers>=0.31.0
+
+# ============================================================================
+# LLAMA and Custom Implementations
+# ============================================================================
+
+# LLAMA implementations
+llama-cpp-python>=0.3.0
+
+# Vicuna
+fschat[model_worker]>=0.2.0
+
+# ============================================================================
+# Code Generation
+# ============================================================================
+
+# GitHub Copilot-like functionality
+# github-copilot>=1.0.0  # If available
+
+# Code analysis
+ast-grep-cli>=0.29.0
+tree-sitter>=0.23.0
+
+# ============================================================================
+# Safety and Guardrails
+# ============================================================================
+
+# NeMo Guardrails
+nemoguardrails>=0.10.0
+
+# Moderation
+presidio-analyzer>=2.2.0
+presidio-anonymizer>=2.2.0
