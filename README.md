@@ -1,5 +1,9 @@
 # GRYPHGEN
 
+<p align="center">
+  <img src="images/gryphgen_logo.png" alt="GRYPHGEN Logo" width="400"/>
+</p>
+
 **Grid Resource Prioritization in Heterogeneous Environments**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
