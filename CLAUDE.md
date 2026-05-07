@@ -1,5 +1,9 @@
 # GRYPHGEN — Claude Code Context
 
+> **Status:** `api.grug.ai` LIVE as of 2026-05-06T21:05:34-0500  
+> Systemd service `gryphgen-agentic` on worlock:8090 → Cloudflare tunnel → https://api.grug.ai  
+> Session doc: `~/Documents/claude_creations/2026-05-06_gryphgen-modernization/session.md`
+
 ## What this repo is
 GRYPHGEN (Grid Resource Prioritization in Heterogeneous Environments) is a Python
 agentic framework for automated software production. The three core modules are:
