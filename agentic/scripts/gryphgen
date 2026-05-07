@@ -1,0 +1,466 @@
+#!/usr/bin/env python3
+"""gryphgen — CLI for the GRYPHGEN Agentic API (api.grug.ai)
+
+Usage:
+    gryphgen config set-key <key>
+    gryphgen gen "write a FastAPI todo API" -l python -o todo.py
+    gryphgen agent "create a REST API and run it"
+    gryphgen search "python asyncio best practices"
+    gryphgen models
+    gryphgen health
+"""
+
+import argparse
+import json
+import os
+import sys
+import threading
+import time
+import tomllib
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+# ── ANSI ──────────────────────────────────────────────────────────────────────
+
+_TTY = sys.stderr.isatty()
+
+
+def _esc(code: str, s: str) -> str:
+    return f"\033[{code}m{s}\033[0m" if _TTY else s
+
+
+def _dim(s: str) -> str:   return _esc("2", s)
+def _green(s: str) -> str: return _esc("32", s)
+def _red(s: str) -> str:   return _esc("31", s)
+def _bold(s: str) -> str:  return _esc("1", s)
+def _cyan(s: str) -> str:  return _esc("36", s)
+
+
+# ── Config ────────────────────────────────────────────────────────────────────
+
+_CONFIG_PATH = Path.home() / ".config" / "gryphgen" / "config.toml"
+_DEFAULT_URL = "https://api.grug.ai"
+
+
+def _load_config() -> dict:
+    if _CONFIG_PATH.exists():
+        with open(_CONFIG_PATH, "rb") as f:
+            return tomllib.load(f)
+    return {}
+
+
+def _save_config(cfg: dict) -> None:
+    _CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f'{k} = "{v}"' for k, v in cfg.items()]
+    _CONFIG_PATH.write_text("\n".join(lines) + "\n")
+
+
+def _resolve_key(args) -> str:
+    key = (
+        getattr(args, "key", None)
+        or os.environ.get("GRYPHGEN_API_KEY")
+        or _load_config().get("api_key")
+    )
+    if not key:
+        print(_red("✗ No API key found."), file=sys.stderr)
+        print(_dim("  Run:    gryphgen config set-key <key>"), file=sys.stderr)
+        print(_dim("  Or set: export GRYPHGEN_API_KEY=<key>"), file=sys.stderr)
+        sys.exit(1)
+    return key
+
+
+def _resolve_url(args) -> str:
+    return (
+        getattr(args, "url", None)
+        or os.environ.get("GRYPHGEN_URL")
+        or _load_config().get("api_url")
+        or _DEFAULT_URL
+    ).rstrip("/")
+
+
+# ── HTTP ──────────────────────────────────────────────────────────────────────
+
+def _post(url: str, payload: dict, key: str, timeout: int = 180) -> dict:
+    data = json.dumps(payload).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": key,
+            "User-Agent": "gryphgen-cli/1.0",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read())
+
+
+def _get(url: str, key: str | None = None, timeout: int = 10) -> dict | list:
+    headers: dict = {"User-Agent": "gryphgen-cli/1.0"}
+    if key:
+        headers["X-API-Key"] = key
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read())
+
+
+def _http_error_msg(e: urllib.error.HTTPError) -> str:
+    try:
+        body = json.loads(e.read())
+        return body.get("detail", str(e))
+    except Exception:
+        return str(e)
+
+
+# ── Spinner ───────────────────────────────────────────────────────────────────
+
+class _Spinner:
+    _FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+    def __init__(self, msg: str) -> None:
+        self._msg = msg
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._spin, daemon=True)
+
+    def __enter__(self):
+        if _TTY:
+            self._thread.start()
+        return self
+
+    def __exit__(self, *_):
+        self._stop.set()
+        if _TTY and self._thread.is_alive():
+            self._thread.join()
+            print("\r\033[K", end="", flush=True, file=sys.stderr)
+
+    def _spin(self):
+        i = 0
+        while not self._stop.is_set():
+            frame = self._FRAMES[i % len(self._FRAMES)]
+            print(f"\r{_dim(frame + '  ' + self._msg)}", end="", flush=True, file=sys.stderr)
+            i += 1
+            time.sleep(0.1)
+
+
+# ── gen ───────────────────────────────────────────────────────────────────────
+
+def cmd_gen(args) -> None:
+    key = _resolve_key(args)
+    base = _resolve_url(args)
+    cfg = _load_config()
+
+    language = args.language or cfg.get("default_language", "python")
+
+    payload: dict = {
+        "prompt": args.prompt,
+        "language": language,
+        "include_tests": args.include_tests,
+        "include_docs": not args.no_docs,
+        "max_tokens": args.tokens,
+        "temperature": args.temp,
+    }
+    if args.framework:
+        payload["framework"] = args.framework
+    if args.tier == "fast":
+        payload["reasoning_effort"] = "none"
+    elif args.tier == "strong":
+        payload["reasoning_effort"] = "high"
+    if args.files:
+        payload["context_files"] = args.files
+    if args.web:
+        payload["web_context"] = True
+
+    with _Spinner(f"generating {language} code…"):
+        try:
+            result = _post(f"{base}/api/v1/code/generate", payload, key)
+        except urllib.error.HTTPError as e:
+            print(_red(f"\n✗ {e.code}: {_http_error_msg(e)}"), file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(_red(f"\n✗ {e}"), file=sys.stderr)
+            sys.exit(1)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return
+
+    code = result.get("code", "")
+    tier = result.get("tier", "?")
+    backend = result.get("backend_used", "?")
+    gen_time = result.get("generation_time", 0)
+    tokens = result.get("tokens_used", 0)
+    footer = _dim(f"✓ {tier}  {backend}  {gen_time:.2f}s  {tokens} tokens")
+
+    if args.output:
+        Path(args.output).write_text(code)
+        print(footer + _dim(f"  → {args.output}"), file=sys.stderr)
+    else:
+        print(code)
+        if not args.quiet and sys.stdout.isatty():
+            print(footer)
+
+
+# ── agent ─────────────────────────────────────────────────────────────────────
+
+def cmd_agent(args) -> None:
+    key = _resolve_key(args)
+    base = _resolve_url(args)
+
+    payload: dict = {"task": args.task}
+    if args.max_steps:
+        payload["max_steps"] = args.max_steps
+    if args.files:
+        workspace = {}
+        for filepath in args.files:
+            p = Path(filepath)
+            workspace[p.name] = p.read_text()
+        payload["files"] = workspace
+
+    with _Spinner("agent running…"):
+        try:
+            result = _post(f"{base}/api/v1/agent/run", payload, key, timeout=600)
+        except urllib.error.HTTPError as e:
+            print(_red(f"\n✗ {e.code}: {_http_error_msg(e)}"), file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(_red(f"\n✗ {e}"), file=sys.stderr)
+            sys.exit(1)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return
+
+    for step in result.get("trace", []):
+        n = step.get("step", "?")
+        tool = step.get("tool", "?")
+        elapsed = step.get("elapsed_s", 0)
+        arg_parts = "  ".join(
+            f"{k}={str(v)[:50]}" for k, v in step.get("args", {}).items()
+        )
+        print(_dim(f"[{n}] {tool:<12} {arg_parts}  ({elapsed:.1f}s)"))
+
+    print("─" * 50)
+    print(result.get("output", ""))
+    steps = result.get("steps_taken", 0)
+    total = result.get("total_time_s", 0)
+    model = result.get("model", "?")
+    truncated = "  (truncated)" if result.get("truncated") else ""
+    print(_dim(f"\n{steps} steps  {total:.1f}s  model={model}{truncated}"))
+
+
+# ── search ────────────────────────────────────────────────────────────────────
+
+def cmd_search(args) -> None:
+    key = _resolve_key(args)
+    base = _resolve_url(args)
+    url = (
+        f"{base}/api/v1/tools/search"
+        f"?q={urllib.parse.quote(args.query)}"
+        f"&max_results={args.max_results}"
+    )
+
+    try:
+        result = _get(url, key)
+    except urllib.error.HTTPError as e:
+        print(_red(f"✗ {e.code}: {_http_error_msg(e)}"), file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(_red(f"✗ {e}"), file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return
+
+    results = result.get("results", [])
+    if not results:
+        print(_dim("No results."))
+        return
+    for r in results:
+        print(_bold(r.get("title", "")))
+        print(_dim(r.get("url", "")))
+        snippet = r.get("snippet", "")
+        if snippet:
+            print(snippet[:240])
+        print()
+
+
+# ── models ────────────────────────────────────────────────────────────────────
+
+def cmd_models(args) -> None:
+    key = _resolve_key(args)
+    base = _resolve_url(args)
+    try:
+        models = _get(f"{base}/api/v1/code/models", key)
+    except Exception as e:
+        print(_red(f"✗ {e}"), file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        print(json.dumps(models, indent=2))
+        return
+
+    thinker = [m for m in models if m.startswith("thinker:")]
+    coder = [m for m in models if m.startswith("coder:")]
+    other = [m for m in models if not m.startswith(("thinker:", "coder:"))]
+
+    if thinker:
+        print(_cyan("THINKER (GPU 0)"))
+        for m in thinker:
+            print(f"  {m.removeprefix('thinker:')}")
+    if coder:
+        print(_cyan("CODER (GPU 1)"))
+        for m in coder:
+            print(f"  {m.removeprefix('coder:')}")
+    for m in other:
+        print(f"  {m}")
+
+
+# ── health ────────────────────────────────────────────────────────────────────
+
+def cmd_health(args) -> None:
+    base = _resolve_url(args)
+    try:
+        result = _get(f"{base}/health")
+        status = result.get("status", "unknown")
+        service = result.get("service", "")
+        print(_green(f"✓ {status}") + _dim(f"  {service}  {base}"))
+    except Exception as e:
+        print(_red(f"✗ unreachable: {e}"), file=sys.stderr)
+        sys.exit(1)
+
+
+# ── config ────────────────────────────────────────────────────────────────────
+
+def cmd_config(args) -> None:
+    cfg = _load_config()
+
+    if args.config_cmd == "set-key":
+        cfg["api_key"] = args.value
+        _save_config(cfg)
+        print(_green(f"✓ key saved") + _dim(f"  {_CONFIG_PATH}"))
+
+    elif args.config_cmd == "set-url":
+        cfg["api_url"] = args.value
+        _save_config(cfg)
+        print(_green(f"✓ url saved") + _dim(f"  {_CONFIG_PATH}"))
+
+    elif args.config_cmd == "show":
+        key = cfg.get("api_key") or os.environ.get("GRYPHGEN_API_KEY", "")
+        if key:
+            redacted = key[:8] + "…" + key[-4:] if len(key) > 12 else "set"
+        else:
+            redacted = _red("NOT SET")
+        print(f"key:  {redacted}")
+        print(f"url:  {cfg.get('api_url', _DEFAULT_URL)}")
+        print(_dim(f"file: {_CONFIG_PATH}"))
+
+
+# ── parser ────────────────────────────────────────────────────────────────────
+
+def _build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="gryphgen",
+        description="CLI for the GRYPHGEN Agentic API",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+examples:
+  gryphgen config set-key grug_xxxxx
+  gryphgen gen "write a fibonacci function" -l python
+  gryphgen gen "REST API for a todo app" -l python -o todo.py
+  gryphgen gen "refactor auth" -l python --files auth.py --tier strong -o auth_v2.py
+  gryphgen gen "CSRF middleware" -l python --web -o csrf.py
+  gryphgen agent "create hello.py, run it, fix any errors"
+  gryphgen search "FastAPI"
+  gryphgen models
+  gryphgen health
+""",
+    )
+    p.add_argument("--key", metavar="KEY", help="API key (overrides env/config)")
+    p.add_argument("--url", metavar="URL", help=f"API URL (default: {_DEFAULT_URL})")
+    p.add_argument("--json", action="store_true", help="Raw JSON output")
+
+    sub = p.add_subparsers(dest="command", metavar="COMMAND")
+    sub.required = True
+
+    # gen
+    gen = sub.add_parser("gen", help="Generate code from a natural language prompt")
+    gen.add_argument("prompt", help="What to build")
+    gen.add_argument("-l", "--language", default="python", metavar="LANG",
+                     help="Programming language (default: python)")
+    gen.add_argument("-f", "--framework", default=None, metavar="FRAMEWORK",
+                     help="Framework hint (e.g. fastapi, django, react)")
+    gen.add_argument("-o", "--output", default=None, metavar="FILE",
+                     help="Save code to file (default: print to stdout)")
+    gen.add_argument("-t", "--tier", choices=["fast", "standard", "strong"],
+                     default=None, help="Force execution tier")
+    gen.add_argument("--files", nargs="+", metavar="FILE",
+                     help="Context filenames — triggers STRONG tier")
+    gen.add_argument("--web", action="store_true",
+                     help="Prepend DDG search to STRONG analysis")
+    gen.add_argument("--include-tests", action="store_true",
+                     help="Also generate unit tests")
+    gen.add_argument("--no-docs", action="store_true",
+                     help="Skip docstring generation")
+    gen.add_argument("--tokens", type=int, default=4096, metavar="N",
+                     help="Max tokens (default: 4096)")
+    gen.add_argument("--temp", type=float, default=0.7, metavar="FLOAT",
+                     help="Temperature (default: 0.7)")
+    gen.add_argument("--quiet", action="store_true",
+                     help="Code only, no metadata footer")
+    gen.add_argument("--json", action="store_true", help="Raw JSON output")
+    gen.set_defaults(func=cmd_gen)
+
+    # agent
+    agent = sub.add_parser("agent", help="Run the agentic ReAct loop on a task")
+    agent.add_argument("task", help="Natural language task")
+    agent.add_argument("--max-steps", type=int, default=None,
+                       help="Override max agent steps (default: server default)")
+    agent.add_argument("--files", nargs="+", metavar="FILE",
+                       help="Seed agent workspace with these files (reads from disk)")
+    agent.add_argument("--json", action="store_true", help="Raw JSON output")
+    agent.set_defaults(func=cmd_agent)
+
+    # search
+    srch = sub.add_parser("search", help="Search via DuckDuckGo Instant Answers")
+    srch.add_argument("query", help="Search query")
+    srch.add_argument("--max-results", type=int, default=5)
+    srch.add_argument("--json", action="store_true", help="Raw JSON output")
+    srch.set_defaults(func=cmd_search)
+
+    # models
+    mdl = sub.add_parser("models", help="List models available on the backend")
+    mdl.add_argument("--json", action="store_true", help="Raw JSON output")
+    mdl.set_defaults(func=cmd_models)
+
+    # health
+    hlt = sub.add_parser("health", help="Check API health")
+    hlt.set_defaults(func=cmd_health)
+
+    # config
+    cfg = sub.add_parser("config", help="Manage local configuration")
+    csub = cfg.add_subparsers(dest="config_cmd", metavar="SUBCOMMAND")
+    csub.required = True
+    sk = csub.add_parser("set-key", help="Store API key in config file")
+    sk.add_argument("value", metavar="KEY")
+    su = csub.add_parser("set-url", help="Override API URL")
+    su.add_argument("value", metavar="URL")
+    csub.add_parser("show", help="Print current config (key redacted)")
+    cfg.set_defaults(func=cmd_config)
+
+    return p
+
+
+# ── entry ─────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = _build_parser()
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
