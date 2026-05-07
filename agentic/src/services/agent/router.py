@@ -13,10 +13,14 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Security, status
 from pydantic import BaseModel, Field
 
 from ...agent import AgentResult, AgentRunner
+
+logger = logging.getLogger(__name__)
 from ...auth.api_keys import require_api_key
 from ...auth.rate_limit import agent_limiter
 
@@ -98,6 +102,7 @@ async def agent_run(
             files=request.files,
         )
     except Exception as exc:
+        logger.exception("Agent run failed for task %r", request.task)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Agent error: {exc}",

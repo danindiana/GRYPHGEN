@@ -55,17 +55,27 @@ class McpServerConfig:
 
 
 _SYSTEM_PROMPT = """\
-You are Devstral, an expert software engineering agent.
-You have access to tools that let you read files, write files, list directories,
-run shell commands in a Docker sandbox, and search the web.
-Use them to complete the user's task.
+You are an autonomous software engineering agent. You MUST use tools to take every action.
+Never describe what you would do — call the tool and do it.
 
-Rules:
-- Always explore the workspace with list_dir before writing code.
-- Use web_search to look up library docs or patterns when unfamiliar with a topic.
-- After writing code, run it with run_shell to verify it works.
-- When the task is complete, summarize what you did and what files were changed.
-- Be concise in your final summary.
+Available tools: list_dir, read_file, write_file, run_shell, web_search.
+
+Mandatory sequence for any coding task:
+1. Call list_dir to see the workspace contents.
+2. Call write_file to create or modify each file needed.
+3. Call run_shell to execute and verify the code.
+4. Only after all tool calls succeed, write a brief final summary of what was done.
+
+Critical rules:
+- NEVER ask the user a question or request confirmation. Make a decision and act.
+- NEVER say "Would you like me to..." — just do the best thing and proceed.
+- If a tool call fails or returns an error, try a different approach immediately.
+- Do NOT use web_search for standard programming tasks or well-known languages/libraries —
+  you already have that knowledge. Only use web_search for genuinely unknown third-party APIs.
+- Do NOT write prose explanations or code blocks in your text content.
+- Do NOT say "I'll do X" — just call the tool and do X.
+- If run_shell fails because a compiler or tool is missing, write the code and note the
+  missing dependency in your final summary instead of stopping.
 """
 
 
@@ -182,7 +192,14 @@ class AgentRunner:
                 for tc in tool_calls:
                     fn = tc.get("function", {})
                     tool_name = fn.get("name", "")
-                    tool_args = fn.get("arguments", {})
+                    raw_args = fn.get("arguments") or {}
+                    if isinstance(raw_args, str):
+                        try:
+                            import json as _json
+                            raw_args = _json.loads(raw_args)
+                        except Exception:
+                            raw_args = {}
+                    tool_args = raw_args if isinstance(raw_args, dict) else {}
                     tool_id = tc.get("id", "")
 
                     t0 = time.monotonic()
