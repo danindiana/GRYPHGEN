@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     anthropic_model: str = Field(default="claude-sonnet-4-6")
     openai_model: str = Field(default="gpt-4o")
 
+    # Mistral API
+    mistral_api_key: str = Field(default="")
+    mistral_model: str = Field(default="mistral-small-latest")
+    gryphgen_worker_concurrency: int = Field(default=6)
+
     code_gen_temperature: float = Field(default=0.7)
     code_gen_max_tokens: int = Field(default=4096)
 

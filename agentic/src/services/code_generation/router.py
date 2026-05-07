@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Security
 from pydantic import BaseModel, Field
 
 from ...auth.api_keys import require_api_key
+from ...auth.rate_limit import generate_limiter
 from ...llm.generator import get_generator
 
 router = APIRouter()
@@ -22,6 +23,12 @@ class CodeGenerationRequest(BaseModel):
     max_tokens: int = Field(default=4096, description="Maximum tokens to generate")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Generation temperature")
     model: Optional[str] = Field(None, description="Override model (backend-specific name)")
+    context_files: Optional[list[str]] = Field(
+        None, description="Filenames involved — signals multi-file complexity to router"
+    )
+    reasoning_effort: Optional[str] = Field(
+        None, description="Override routing: 'none' for fast, 'high' for deep reasoning"
+    )
 
 
 class CodeGenerationResponse(BaseModel):
@@ -32,14 +39,18 @@ class CodeGenerationResponse(BaseModel):
     model_used: str
     tokens_used: int
     generation_time: float
+    tier: str = Field(default="", description="Complexity tier chosen by router")
+    reasoning_effort_used: str = Field(default="", description="reasoning_effort applied")
+    backend_used: str = Field(default="", description="Backend that produced the response")
 
 
 @router.post("/generate", response_model=CodeGenerationResponse)
 async def generate_code(
     request: CodeGenerationRequest,
-    _: str = Security(require_api_key),
+    api_key: str = Security(require_api_key),
 ) -> CodeGenerationResponse:
     """Generate code from a natural language prompt using the configured LLM backend."""
+    generate_limiter.check(api_key)
     generator = get_generator()
 
     try:
@@ -53,6 +64,8 @@ async def generate_code(
             include_tests=request.include_tests,
             include_docs=request.include_docs,
             style_guide=request.style_guide,
+            context_files=request.context_files,
+            reasoning_effort=request.reasoning_effort,
         )
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"LLM backend error: {exc}") from exc
@@ -65,6 +78,9 @@ async def generate_code(
         model_used=result.model,
         tokens_used=result.tokens_used,
         generation_time=result.generation_time,
+        tier=result.tier,
+        reasoning_effort_used=result.reasoning_effort,
+        backend_used=result.backend_used,
     )
 
 
