@@ -9,11 +9,14 @@ from .generator import GenerationResult
 logger = logging.getLogger(__name__)
 
 _CLASSIFIER_SYSTEM = (
-    "You are a task classifier. Reply with exactly one word: FAST, STANDARD, or STRONG.\n"
-    "FAST: single function, syntax fix, hello world, trivial snippet\n"
-    "STANDARD: complete module, API endpoint, data structure, test suite\n"
-    "STRONG: multi-file changes, debugging, architecture, refactor, "
-    "anything needing codebase context"
+    "Classify this coding task as FAST, STANDARD, or STRONG. Reply with exactly one word.\n\n"
+    "FAST — single function, trivial logic: hello world, add two numbers, reverse a string, "
+    "check if prime, simple loop, basic math, one-liner utility\n"
+    "STANDARD — multiple functions, one module, API endpoint, class with methods, "
+    "algorithm, test suite, data structure implementation\n"
+    "STRONG — multi-file changes, debugging existing code, architecture, security systems, "
+    "anything mentioning context files or cross-module refactoring\n\n"
+    "Default to FAST for any single-function task. Reply with one word only."
 )
 
 # Kept for backward compat with any code that imported the old enum
@@ -28,23 +31,30 @@ class TaskComplexity(Enum):
 
 class TandemRouter:
     async def classify(self, prompt: str, language: str) -> str:
-        """Ask THINKER to classify the task. Falls back to STANDARD on timeout/error."""
+        """Ask THINKER to classify the task. Falls back to STANDARD on timeout/error.
+
+        Uses chat API so the system prompt is handled natively by deepseek-r1.
+        Parses the last word of the response — the model sometimes prepends reasoning.
+        """
         from .backends.ollama import THINKER
 
+        messages = [
+            {"role": "system", "content": _CLASSIFIER_SYSTEM},
+            {"role": "user", "content": f"Language: {language}\nTask: {prompt}"},
+        ]
         try:
-            result = await THINKER.generate(
-                f"Language: {language}\nTask: {prompt}",
-                system=_CLASSIFIER_SYSTEM,
+            result = await THINKER.chat(
+                messages,
                 temperature=0.0,
-                max_tokens=50,
-                timeout=10.0,
             )
             text = result.text.strip()
-            # Strip deepseek-r1 thinking blocks
-            if "</think>" in text:
-                text = text.split("</think>")[-1].strip()
-            word = text.split()[0].upper() if text else "STANDARD"
-            return word if word in ("FAST", "STANDARD", "STRONG") else "STANDARD"
+            # Take last word — model sometimes leads with a reasoning sentence
+            words = [w.upper().rstrip(".,!") for w in text.split() if w.strip()]
+            for word in reversed(words):
+                if word in ("FAST", "STANDARD", "STRONG"):
+                    return word
+            logger.warning("Classifier returned unexpected text %r, defaulting to STANDARD", text[:80])
+            return "STANDARD"
         except Exception as exc:
             logger.warning("Classification failed (%s), defaulting to STANDARD", exc)
             return "STANDARD"
