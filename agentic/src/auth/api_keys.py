@@ -35,6 +35,22 @@ def _hash(key: str) -> str:
     return hashlib.sha256(key.encode()).hexdigest()
 
 
+def key_fingerprint(key: str) -> str:
+    """Return first 8 hex chars of the key's SHA-256 hash — safe to log."""
+    return _hash(key)[:8]
+
+
+def extract_key_from_headers(headers: dict) -> Optional[str]:
+    """Pull the raw API key from request headers without raising."""
+    key = headers.get("x-api-key") or headers.get("X-API-Key")
+    if key:
+        return key
+    auth = headers.get("authorization") or headers.get("Authorization")
+    if auth and auth.lower().startswith("bearer "):
+        return auth[7:]
+    return None
+
+
 def _check(key: Optional[str]) -> str:
     """Validate key against stored hashes. Returns the key on success."""
     if not key:

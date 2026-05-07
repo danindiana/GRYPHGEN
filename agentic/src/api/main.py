@@ -1,5 +1,6 @@
 """Main API Gateway application."""
 
+import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -8,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from ..auth.api_keys import extract_key_from_headers, key_fingerprint
 from ..common.config import get_settings
 from ..common.logger import get_logger, setup_logging
 
@@ -55,6 +57,22 @@ app.add_middleware(
 Instrumentator().instrument(app).expose(app)
 
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log every request with key fingerprint, method, path, status, and duration."""
+    start = time.monotonic()
+    raw_key = extract_key_from_headers(dict(request.headers))
+    key_id = key_fingerprint(raw_key) if raw_key else "anonymous"
+
+    response = await call_next(request)
+
+    elapsed_ms = int((time.monotonic() - start) * 1000)
+    logger.info(
+        f"key={key_id} {request.method} {request.url.path} → {response.status_code} ({elapsed_ms}ms)"
+    )
+    return response
+
+
 @app.get("/")
 async def root() -> dict:
     """Root endpoint."""
@@ -91,8 +109,15 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Core routers — always loaded
 from ..services.code_generation import router as code_generation_router
+from ..services.agent import router as agent_service_module
 
 app.include_router(code_generation_router, prefix="/api/v1/code", tags=["Code Generation"])
+
+try:
+    from ..services.agent.router import router as agent_router
+    app.include_router(agent_router, prefix="/api/v1/agent", tags=["Agent"])
+except Exception as _e:
+    logger.warning(f"Skipping agent router: {_e}")
 
 # Optional routers — skip gracefully if their deps aren't installed
 _optional_routers = [
