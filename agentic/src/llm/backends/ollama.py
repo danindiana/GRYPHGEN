@@ -1,12 +1,15 @@
 """Ollama local LLM backend."""
 
-import json
+import asyncio
 import time
 from typing import AsyncIterator
 
 import httpx
 
 from ..generator import GenerationResult
+
+# Allow up to 2 concurrent Ollama requests — worlock has 2 GPUs
+_OLLAMA_SEMAPHORE = asyncio.Semaphore(2)
 
 
 class OllamaBackend:
@@ -29,21 +32,22 @@ class OllamaBackend:
 
         full_prompt = f"{system}\n\n{prompt}" if system else prompt
 
-        async with httpx.AsyncClient(timeout=300.0) as client:
-            resp = await client.post(
-                f"{self.base_url}/api/generate",
-                json={
-                    "model": effective_model,
-                    "prompt": full_prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": temperature,
-                        "num_predict": max_tokens,
+        async with _OLLAMA_SEMAPHORE:
+            async with httpx.AsyncClient(timeout=300.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/api/generate",
+                    json={
+                        "model": effective_model,
+                        "prompt": full_prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens,
+                        },
                     },
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+                )
+                resp.raise_for_status()
+                data = resp.json()
 
         elapsed = time.monotonic() - t0
         text = data.get("response", "")
@@ -66,21 +70,22 @@ class OllamaBackend:
         effective_model = model or self.model
         t0 = time.monotonic()
 
-        async with httpx.AsyncClient(timeout=300.0) as client:
-            resp = await client.post(
-                f"{self.base_url}/api/chat",
-                json={
-                    "model": effective_model,
-                    "messages": messages,
-                    "stream": False,
-                    "options": {
-                        "temperature": temperature,
-                        "num_predict": max_tokens,
+        async with _OLLAMA_SEMAPHORE:
+            async with httpx.AsyncClient(timeout=300.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/api/chat",
+                    json={
+                        "model": effective_model,
+                        "messages": messages,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens,
+                        },
                     },
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
+                )
+                resp.raise_for_status()
+                data = resp.json()
 
         elapsed = time.monotonic() - t0
         text = data.get("message", {}).get("content", "")
