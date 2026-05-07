@@ -1,0 +1,141 @@
+digraph code_generation_pipeline {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#ff00ff"
+        label="Code Generation Pipeline  —  FAST / STANDARD / STRONG"
+        labelloc=t
+        fontsize=20
+        pad=0.6
+        splines=curved
+        rankdir=LR
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    user [
+        label="User Prompt\nvia gg-wizard\nor curl"
+        fillcolor="#001a1a"
+        color="#00ffff"
+        fontcolor="#00ffff"
+        shape=parallelogram
+    ]
+
+    tier_select [
+        label="Tier Selection\nreasoning_effort field"
+        fillcolor="#0d001a"
+        color="#8800ff"
+        fontcolor="#8800ff"
+        shape=diamond
+    ]
+
+    subgraph cluster_fast {
+        label="FAST  (<8s)"
+        fontcolor="#ff9900"
+        color="#ff9900"
+        bgcolor="#1a0d00"
+        style=rounded
+        penwidth=2
+
+        fast_coder [
+            label="qwen2.5-coder:7b\nDirect generation\nno planning"
+            fillcolor="#1a0d00"
+            color="#ff9900"
+            fontcolor="#ff9900"
+        ]
+    }
+
+    subgraph cluster_standard {
+        label="STANDARD  (~15-20s)"
+        fontcolor="#ffcc00"
+        color="#ffcc00"
+        bgcolor="#1a1200"
+        style=rounded
+        penwidth=2
+
+        std_thinker [
+            label="deepseek-r1:14b\nStructured brief\nGOAL · FUNCTIONS\nPATTERNS · EDGE_CASES"
+            fillcolor="#1a1200"
+            color="#ffcc00"
+            fontcolor="#ffcc00"
+        ]
+        std_coder [
+            label="qwen2.5-coder:7b\nImplements from brief"
+            fillcolor="#1a0d00"
+            color="#ff9900"
+            fontcolor="#ff9900"
+        ]
+    }
+
+    subgraph cluster_strong {
+        label="STRONG  (~30-90s)"
+        fontcolor="#ffff00"
+        color="#ffff00"
+        bgcolor="#1a1500"
+        style=rounded
+        penwidth=2
+
+        str_thinker1 [
+            label="deepseek-r1:14b\nAnalyse + Plan"
+            fillcolor="#1a1500"
+            color="#ffff00"
+            fontcolor="#ffff00"
+        ]
+        str_coder1 [
+            label="qwen2.5-coder:7b\nImplement"
+            fillcolor="#1a0d00"
+            color="#ff9900"
+            fontcolor="#ff9900"
+        ]
+        str_thinker2 [
+            label="deepseek-r1:14b\nSecurity Review"
+            fillcolor="#1a1500"
+            color="#ffdd00"
+            fontcolor="#ffdd00"
+        ]
+        str_coder2 [
+            label="qwen2.5-coder:7b\nRevise  (up to 2×)"
+            fillcolor="#1a0d00"
+            color="#ffaa00"
+            fontcolor="#ffaa00"
+        ]
+    }
+
+    response [
+        label="CodeGenerationResponse\n{\n  code: string,\n  tier: FAST|STANDARD|STRONG,\n  backend_used: string,\n  tokens_used: int,\n  generation_time: float\n}"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+        shape=note
+    ]
+
+    wizard_result [
+        label="gg-wizard Result Screen\ntier · time · tokens · model\n↑↓ scroll output"
+        fillcolor="#1a001a"
+        color="#ff00ff"
+        fontcolor="#ff00ff"
+        shape=parallelogram
+    ]
+
+    user -> tier_select [color="#00ffff" fontcolor="#00ffff"]
+    tier_select -> fast_coder [label="effort=none" color="#ff9900" fontcolor="#ff9900"]
+    tier_select -> std_thinker [label="effort=medium" color="#ffcc00" fontcolor="#ffcc00"]
+    tier_select -> str_thinker1 [label="effort=high" color="#ffff00" fontcolor="#ffff00"]
+    fast_coder -> response [color="#00ff41" fontcolor="#00ff41"]
+    std_thinker -> std_coder [label="brief" color="#ff9900" fontcolor="#ff9900"]
+    std_coder -> response [color="#00ff41" fontcolor="#00ff41"]
+    str_thinker1 -> str_coder1 [label="plan" color="#ff9900" fontcolor="#ff9900"]
+    str_coder1 -> str_thinker2 [label="draft" color="#ffdd00" fontcolor="#ffdd00"]
+    str_thinker2 -> str_coder2 [label="review\nfeedback" color="#ffaa00" fontcolor="#ffaa00"]
+    str_coder2 -> response [color="#00ff41" fontcolor="#00ff41"]
+    response -> wizard_result [color="#ff00ff" fontcolor="#ff00ff"]
+}

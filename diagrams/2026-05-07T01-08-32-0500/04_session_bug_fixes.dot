@@ -1,0 +1,185 @@
+digraph session_bug_fixes {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ff41"
+        label="Session Bug Fixes  —  Root Causes  +  Resolutions"
+        labelloc=t
+        fontsize=20
+        pad=0.7
+        splines=curved
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    subgraph cluster_bug1 {
+        label="Bug 1 — Wrong Port"
+        fontcolor="#ff0044"
+        color="#ff0044"
+        bgcolor="#1a0000"
+        style=rounded
+        penwidth=2
+
+        b1_symptom [
+            label="Symptom\n\"chat completions\" 404\nin gg-wizard"
+            fillcolor="#1a0000"
+            color="#ff0044"
+            fontcolor="#ff0044"
+            shape=parallelogram
+        ]
+        b1_cause [
+            label="Root Cause\nconfig.toml api_url=:8000\nservice runs on :8090"
+            fillcolor="#1a0000"
+            color="#ff3366"
+            fontcolor="#ff3366"
+            shape=note
+        ]
+        b1_fix [
+            label="Fix\napi_url = http://localhost:8090"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+    }
+
+    subgraph cluster_bug2 {
+        label="Bug 2 — Invalid API Key"
+        fontcolor="#ff3300"
+        color="#ff3300"
+        bgcolor="#1a0500"
+        style=rounded
+        penwidth=2
+
+        b2_symptom [
+            label="Symptom\n403 Invalid API key\nfingerprint 62af8704"
+            fillcolor="#1a0500"
+            color="#ff3300"
+            fontcolor="#ff3300"
+            shape=parallelogram
+        ]
+        b2_cause [
+            label="Root Cause\nSHA-256(wizard_key) not in\nGRYPHGEN_API_KEYS env var"
+            fillcolor="#1a0500"
+            color="#ff5533"
+            fontcolor="#ff5533"
+            shape=note
+        ]
+        b2_fix [
+            label="Fix\nAppend hash to .env\nRestart service"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+    }
+
+    subgraph cluster_bug3 {
+        label="Bug 3 — Agent No-Op"
+        fontcolor="#ff6600"
+        color="#ff6600"
+        bgcolor="#1a0a00"
+        style=rounded
+        penwidth=2
+
+        b3_symptom [
+            label="Symptom\nAgent returns prose instead\nof calling tools. trace=[]"
+            fillcolor="#1a0a00"
+            color="#ff6600"
+            fontcolor="#ff6600"
+            shape=parallelogram
+        ]
+        b3_cause [
+            label="Root Cause\nSystem prompt used passive\nrules — devstral described\nsteps instead of acting"
+            fillcolor="#1a0a00"
+            color="#ff8800"
+            fontcolor="#ff8800"
+            shape=note
+        ]
+        b3_fix [
+            label="Fix\nImperative system prompt:\nNEVER describe, call the tool\nNEVER ask user questions"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+    }
+
+    subgraph cluster_bug4 {
+        label="Bug 4 — 502 on Agent Run"
+        fontcolor="#ff0000"
+        color="#ff0000"
+        bgcolor="#1a0000"
+        style=rounded
+        penwidth=2
+
+        b4_symptom [
+            label="Symptom\nPOST /api/v1/agent/run\nreturns 502 Bad Gateway"
+            fillcolor="#1a0000"
+            color="#ff0000"
+            fontcolor="#ff0000"
+            shape=parallelogram
+        ]
+        b4_cause [
+            label="Root Cause\nOllama returns arguments=null\nfn.get(\"arguments\", {}) → None\ncrashes on subscript"
+            fillcolor="#1a0000"
+            color="#ff3333"
+            fontcolor="#ff3333"
+            shape=note
+        ]
+        b4_fix [
+            label="Fix\nraw_args = fn.get(\"arguments\") or {}\nhandle str JSON + None\nAdd logger.exception()"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+    }
+
+    subgraph cluster_bug5 {
+        label="Bug 5 — Trace Not Displayed"
+        fontcolor="#ffff00"
+        color="#ffff00"
+        bgcolor="#1a1a00"
+        style=rounded
+        penwidth=2
+
+        b5_symptom [
+            label="Symptom\nOnly \"─── N steps ───\" shown\nno per-step tool/result"
+            fillcolor="#1a1a00"
+            color="#ffff00"
+            fontcolor="#ffff00"
+            shape=parallelogram
+        ]
+        b5_cause [
+            label="Root Cause\nAgentStep struct missing\nresult field. app.rs only\nshowed step count header"
+            fillcolor="#1a1a00"
+            color="#ffdd00"
+            fontcolor="#ffdd00"
+            shape=note
+        ]
+        b5_fix [
+            label="Fix\nAdd result: Option<String>\nRender per-step entries\ntool · elapsed · result"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+    }
+
+    b1_symptom -> b1_cause [color="#ff3366" fontcolor="#ff3366" style=dashed]
+    b1_cause -> b1_fix [color="#00ff41" fontcolor="#00ff41"]
+    b2_symptom -> b2_cause [color="#ff5533" fontcolor="#ff5533" style=dashed]
+    b2_cause -> b2_fix [color="#00ff41" fontcolor="#00ff41"]
+    b3_symptom -> b3_cause [color="#ff8800" fontcolor="#ff8800" style=dashed]
+    b3_cause -> b3_fix [color="#00ff41" fontcolor="#00ff41"]
+    b4_symptom -> b4_cause [color="#ff3333" fontcolor="#ff3333" style=dashed]
+    b4_cause -> b4_fix [color="#00ff41" fontcolor="#00ff41"]
+    b5_symptom -> b5_cause [color="#ffdd00" fontcolor="#ffdd00" style=dashed]
+    b5_cause -> b5_fix [color="#00ff41" fontcolor="#00ff41"]
+}

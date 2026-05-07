@@ -1,0 +1,161 @@
+digraph project_overview {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ffff"
+        label="GRYPHGEN Modernization — Project Overview  (2026-05-06)"
+        labelloc=t
+        fontsize=20
+        pad=0.7
+        splines=curved
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=1.8
+    ]
+
+    subgraph cluster_session1 {
+        label="Session 1 — API Layer"
+        fontcolor="#00ffff"
+        color="#00ffff"
+        bgcolor="#001a1a"
+        style=rounded
+        penwidth=2
+
+        agentic [
+            label="gryphgen-agentic\nFastAPI  :8090\nLLM backend abstraction"
+            fillcolor="#001a1a"
+            color="#00ffff"
+            fontcolor="#00ffff"
+        ]
+        llm_backends [
+            label="LLM Backends\nollama · anthropic · openai\nGRYPHGEN_LLM_BACKEND"
+            fillcolor="#001a1a"
+            color="#00ccff"
+            fontcolor="#00ccff"
+            shape=note
+        ]
+        cloudflare [
+            label="Cloudflare Tunnel\nhttps://api.grug.ai\n→ localhost:8090"
+            fillcolor="#001a0d"
+            color="#00ff88"
+            fontcolor="#00ff88"
+        ]
+    }
+
+    subgraph cluster_session2 {
+        label="Session 2 — TUI Client"
+        fontcolor="#ff00ff"
+        color="#ff00ff"
+        bgcolor="#1a001a"
+        style=rounded
+        penwidth=2
+
+        wizard [
+            label="gg-wizard\nRatatui TUI  (Rust)\nFAST/STANDARD/STRONG/AGENT"
+            fillcolor="#1a001a"
+            color="#ff00ff"
+            fontcolor="#ff00ff"
+        ]
+        wizard_config [
+            label="~/.config/gryphgen/\nconfig.toml\napi_key · api_url"
+            fillcolor="#0d001a"
+            color="#cc00ff"
+            fontcolor="#cc00ff"
+            shape=note
+        ]
+    }
+
+    subgraph cluster_session3 {
+        label="Session 3 — Local LLM TUI"
+        fontcolor="#ff6600"
+        color="#ff6600"
+        bgcolor="#1a0a00"
+        style=rounded
+        penwidth=2
+
+        ollama_duel [
+            label="ollama-duel\nRatatui TUI  (Rust)\nActor→Critic  +  MCP"
+            fillcolor="#1a0a00"
+            color="#ff6600"
+            fontcolor="#ff6600"
+        ]
+        ollama_backend [
+            label="Ollama  :11434\nqwen2.5:3b\ndevstral:24b  deepseek-r1:14b"
+            fillcolor="#1a1a00"
+            color="#ffff00"
+            fontcolor="#ffff00"
+        ]
+    }
+
+    subgraph cluster_fixes {
+        label="Session 4 — Bug Fixes"
+        fontcolor="#00ff41"
+        color="#00ff41"
+        bgcolor="#001a0d"
+        style=rounded
+        penwidth=2
+
+        fix_port [
+            label="Port Fix\n8000 → 8090"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+        fix_apikey [
+            label="API Key Hash\nSHA-256 registered"
+            fillcolor="#001a0d"
+            color="#00cc33"
+            fontcolor="#00cc33"
+        ]
+        fix_agent [
+            label="Agent Fixes\nsystem prompt · args · logging"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+        fix_trace [
+            label="Trace Display\nper-step tool+result"
+            fillcolor="#001a0d"
+            color="#00aa22"
+            fontcolor="#00aa22"
+        ]
+    }
+
+    workspace [
+        label="GRYPHGEN Workspace\nCargo.toml\nmembers: wizard · ollama-duel"
+        fillcolor="#1a1a1a"
+        color="#888888"
+        fontcolor="#888888"
+        shape=box
+    ]
+
+    github [
+        label="GitHub\ndanindiana/GRYPHGEN\nmain branch"
+        fillcolor="#0d0d1a"
+        color="#6688ff"
+        fontcolor="#6688ff"
+        shape=cylinder
+    ]
+
+    agentic -> llm_backends [color="#00ccff" fontcolor="#00ccff" style=dashed]
+    agentic -> cloudflare [color="#00ff88" fontcolor="#00ff88"]
+    wizard -> agentic [label="POST /api/v1/*\nX-API-Key" color="#ff00ff" fontcolor="#ff00ff"]
+    wizard -> wizard_config [color="#cc00ff" fontcolor="#cc00ff" style=dashed]
+    ollama_duel -> ollama_backend [label="HTTP  /api/chat" color="#ffff00" fontcolor="#ffff00"]
+    fix_port -> wizard [color="#00ff41" fontcolor="#00ff41"]
+    fix_apikey -> agentic [color="#00ff41" fontcolor="#00ff41"]
+    fix_agent -> agentic [color="#00ff41" fontcolor="#00ff41"]
+    fix_trace -> wizard [color="#00ff41" fontcolor="#00ff41"]
+    wizard -> workspace [color="#888888" fontcolor="#888888" style=dashed]
+    ollama_duel -> workspace [color="#888888" fontcolor="#888888" style=dashed]
+    workspace -> github [label="git push" color="#6688ff" fontcolor="#6688ff"]
+}

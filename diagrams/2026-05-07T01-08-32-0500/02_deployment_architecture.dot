@@ -1,0 +1,174 @@
+digraph deployment_architecture {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ffff"
+        label="GRYPHGEN Deployment Architecture  —  worlock"
+        labelloc=t
+        fontsize=20
+        pad=0.7
+        splines=ortho
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=1.8
+    ]
+
+    subgraph cluster_internet {
+        label="Internet"
+        fontcolor="#888888"
+        color="#444444"
+        bgcolor="#111111"
+        style=rounded
+        penwidth=1
+
+        client_browser [
+            label="API Client\n(gg-wizard / curl)"
+            fillcolor="#111111"
+            color="#888888"
+            fontcolor="#888888"
+        ]
+        cf_edge [
+            label="Cloudflare Edge\nhttps://api.grug.ai\nTLS termination"
+            fillcolor="#111111"
+            color="#ff8800"
+            fontcolor="#ff8800"
+        ]
+    }
+
+    subgraph cluster_host {
+        label="worlock  (Ubuntu 22.04  Linux 6.8.12)"
+        fontcolor="#00ffff"
+        color="#00ffff"
+        bgcolor="#001a1a"
+        style=rounded
+        penwidth=2
+
+        subgraph cluster_network {
+            label="Network"
+            fontcolor="#888888"
+            color="#555555"
+            bgcolor="#0d1111"
+            style=rounded
+            penwidth=1
+
+            enp7s0 [
+                label="enp7s0\n192.168.1.151/24\nETH  LAN"
+                fillcolor="#0d1111"
+                color="#888888"
+                fontcolor="#888888"
+            ]
+            wgpia0 [
+                label="wgpia0\nPIA WireGuard\nVPN"
+                fillcolor="#0d1111"
+                color="#888888"
+                fontcolor="#888888"
+            ]
+        }
+
+        subgraph cluster_services {
+            label="Systemd Services"
+            fontcolor="#ff00ff"
+            color="#ff00ff"
+            bgcolor="#1a001a"
+            style=rounded
+            penwidth=2
+
+            cf_tunnel [
+                label="cloudflared\nCloudflare tunnel\n→ localhost:8090"
+                fillcolor="#1a0a00"
+                color="#ff8800"
+                fontcolor="#ff8800"
+            ]
+            svc_agentic [
+                label="gryphgen-agentic\nuvicorn  :8090\n/programs/gryphgen-agentic"
+                fillcolor="#1a001a"
+                color="#ff00ff"
+                fontcolor="#ff00ff"
+            ]
+            svc_ollama [
+                label="ollama.service\n127.0.0.1:11434\nCUDA_VISIBLE_DEVICES=0,1"
+                fillcolor="#1a1a00"
+                color="#ffff00"
+                fontcolor="#ffff00"
+            ]
+            svc_openwebui [
+                label="open-webui\nDocker  :3000\nhost-net"
+                fillcolor="#0d0d1a"
+                color="#6688ff"
+                fontcolor="#6688ff"
+            ]
+        }
+
+        subgraph cluster_gpu {
+            label="GPU Cluster"
+            fontcolor="#ff6600"
+            color="#ff6600"
+            bgcolor="#1a0a00"
+            style=rounded
+            penwidth=2
+
+            gpu0 [
+                label="RTX 5080\n16 GB VRAM\nGPU 0\nTHINKER / AGENT"
+                fillcolor="#1a0800"
+                color="#ff6600"
+                fontcolor="#ff6600"
+            ]
+            gpu1 [
+                label="RTX 3080\n10 GB VRAM\nGPU 1\nCODER"
+                fillcolor="#1a0500"
+                color="#ff4400"
+                fontcolor="#ff4400"
+            ]
+        }
+
+        subgraph cluster_models {
+            label="Loaded Models"
+            fontcolor="#ffff00"
+            color="#ffff00"
+            bgcolor="#1a1a00"
+            style=rounded
+            penwidth=1
+
+            deepseek [
+                label="deepseek-r1:14b\n:11434  THINKER"
+                fillcolor="#1a1500"
+                color="#ffff00"
+                fontcolor="#ffff00"
+            ]
+            coder7b [
+                label="qwen2.5-coder:7b\n:11436  CODER"
+                fillcolor="#1a0d00"
+                color="#ff9900"
+                fontcolor="#ff9900"
+            ]
+            devstral [
+                label="devstral:24b\n:11434  AGENT"
+                fillcolor="#1a1a00"
+                color="#ffe000"
+                fontcolor="#ffe000"
+            ]
+        }
+    }
+
+    client_browser -> cf_edge [label="HTTPS 443" color="#ff8800" fontcolor="#ff8800"]
+    cf_edge -> cf_tunnel [label="tunnel" color="#ff8800" fontcolor="#ff8800"]
+    cf_tunnel -> svc_agentic [label=":8090" color="#ff00ff" fontcolor="#ff00ff"]
+    enp7s0 -> svc_agentic [label="LAN direct" color="#888888" fontcolor="#888888" style=dashed]
+    wgpia0 -> svc_agentic [label="VPN" color="#888888" fontcolor="#888888" style=dashed]
+    svc_agentic -> svc_ollama [label="HTTP /api/chat\n/api/generate" color="#ffff00" fontcolor="#ffff00"]
+    svc_ollama -> gpu0 [color="#ff6600" fontcolor="#ff6600"]
+    svc_ollama -> gpu1 [color="#ff4400" fontcolor="#ff4400"]
+    gpu0 -> deepseek [color="#ffff00" fontcolor="#ffff00" style=dashed]
+    gpu0 -> devstral [color="#ffe000" fontcolor="#ffe000" style=dashed]
+    gpu1 -> coder7b [color="#ff9900" fontcolor="#ff9900" style=dashed]
+    svc_openwebui -> svc_ollama [label="model UI" color="#6688ff" fontcolor="#6688ff" style=dashed]
+}
