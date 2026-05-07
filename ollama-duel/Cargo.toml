@@ -1,0 +1,45 @@
+[package]
+name = "ollama-duel"
+version = "0.1.0"
+edition = "2021"
+description = "MCP-native actor/critic LLM terminal UI powered by Ollama and Ratatui"
+authors = ["ollama-duel"]
+
+[[bin]]
+name = "ollama-duel"
+path = "src/main.rs"
+
+[dependencies]
+# TUI
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
+
+# HTTP
+reqwest = { version = "0.12", features = ["json", "stream"] }
+bytes = "1"
+
+# Serde / config
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Utilities
+anyhow = "1"
+dirs = "5"
+clap = { version = "4", features = ["derive"] }
+chrono = "0.4"
+
+# Logging (file-based, keeps TUI clean)
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

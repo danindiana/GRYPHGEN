@@ -1,0 +1,80 @@
+# ollama-duel configuration
+# Copy to ~/.config/ollama-duel/config.toml or leave as ./config.toml
+
+# ── Actor model ────────────────────────────────────────────────────────────────
+# The "doer" — generates responses and calls MCP tools.
+# Recommended small models for your RTX 5080 (16 GB) + 3080 (10 GB):
+#   qwen2.5:3b    ~2.0 GB  excellent tool-calling for its size
+#   qwen2.5:7b    ~4.5 GB  noticeably better quality
+#   llama3.2:3b   ~2.0 GB  good all-rounder
+#   llama3.1:8b   ~5.0 GB  strong tool-calling
+#   phi3.5:mini   ~2.2 GB  very fast, less reliable tool-calling
+[actor]
+model       = "qwen2.5:3b"
+temperature = 0.7
+max_tool_rounds = 6
+system_prompt = """
+You are a capable AI assistant with access to tools via MCP (Model Context Protocol).
+Use available tools when they help you give a more accurate or complete answer.
+Think step-by-step. Be concise but thorough.
+"""
+
+# ── Critic model ───────────────────────────────────────────────────────────────
+# The "evaluator" — scores the actor's response and requests revisions.
+# Use a fast model here; it doesn't need tool access.
+#   qwen2.5:3b   recommended (matches actor for balanced critique)
+#   gemma2:2b    extremely fast, lighter critique
+#   phi3.5:mini  fast, decent JSON output
+[critic]
+model       = "qwen2.5:3b"
+temperature = 0.15   # Low temperature → consistent JSON output
+
+# ── Orchestration ──────────────────────────────────────────────────────────────
+[orchestration]
+max_revision_rounds  = 2    # 0 = single pass, 1 = one retry, etc.
+critique_threshold   = 7    # Scores below this trigger a revision (when rounds remain)
+
+# ── Ollama connection ──────────────────────────────────────────────────────────
+[ollama]
+base_url    = "http://localhost:11434"
+timeout_secs = 180
+
+# ── MCP servers ────────────────────────────────────────────────────────────────
+# Each enabled server is spawned as a child process (stdio transport).
+# Set enabled = false to disable without removing the entry.
+
+# Local filesystem access (read-only or restricted to a path)
+[[mcp_servers]]
+name    = "filesystem"
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-filesystem", "/home"]
+enabled = false   # set to true after: npm i -g @modelcontextprotocol/server-filesystem
+
+# Brave Search (requires BRAVE_API_KEY env var)
+[[mcp_servers]]
+name    = "brave-search"
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-brave-search"]
+env     = { BRAVE_API_KEY = "${BRAVE_API_KEY}" }
+enabled = false   # set to true after setting BRAVE_API_KEY
+
+# Memory / knowledge graph
+[[mcp_servers]]
+name    = "memory"
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-memory"]
+enabled = false
+
+# Fetch / web scraping
+[[mcp_servers]]
+name    = "fetch"
+command = "uvx"
+args    = ["mcp-server-fetch"]
+enabled = false   # requires: pip install mcp-server-fetch
+
+# SQLite
+# [[mcp_servers]]
+# name    = "sqlite"
+# command = "uvx"
+# args    = ["mcp-server-sqlite", "--db-path", "/tmp/dev.db"]
+# enabled = false
