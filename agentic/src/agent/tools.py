@@ -2,32 +2,21 @@
 Tool implementations for the GRYPHGEN agent.
 
 All file operations are sandboxed to a workspace directory.
-run_shell uses a restricted command whitelist and a hard timeout.
+run_shell executes via DockerSandbox (falls back to whitelist if Docker unavailable).
+web_search queries DuckDuckGo Instant Answers.
 """
 
 from __future__ import annotations
 
-import asyncio
-import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
-# Commands allowed by run_shell (prefix-matched)
-_SHELL_WHITELIST = (
-    "python3", "python", "pip", "pytest", "ruff", "black", "mypy",
-    "cargo", "rustc", "go ", "go\t", "node", "npm", "npx", "deno",
-    "gcc", "g++", "make", "cmake",
-    "ls", "find", "grep", "cat", "head", "tail", "wc", "diff",
-    "git status", "git log", "git diff", "git show",
-    "echo",
-)
+from .sandbox import DockerSandbox
 
-_SHELL_TIMEOUT = 30  # seconds
+_sandbox = DockerSandbox()
 
 
 def _safe_path(workspace: Path, rel: str) -> Path:
-    """Resolve path and assert it stays inside workspace."""
     target = (workspace / rel).resolve()
     workspace_resolved = workspace.resolve()
     if not str(target).startswith(str(workspace_resolved)):
@@ -71,29 +60,23 @@ async def list_dir(workspace: Path, path: str = ".") -> str:
 
 
 async def run_shell(workspace: Path, command: str) -> str:
-    cmd_lower = command.strip().lower()
-    if not any(cmd_lower.startswith(w) for w in _SHELL_WHITELIST):
-        return f"ERROR: command not permitted: {command!r}"
+    return await _sandbox.run(command, workspace)
+
+
+async def web_search(query: str) -> str:
     try:
-        proc = await asyncio.create_subprocess_shell(
-            command,
-            cwd=str(workspace),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-            env={**os.environ, "HOME": str(workspace)},
+        from ..tools.web_search import search as _ddg_search
+        results = await _ddg_search(query, max_results=5)
+        if not results:
+            return "No results found."
+        return "\n\n".join(
+            f"{r['title']}\n{r['url']}\n{r['snippet']}" for r in results
         )
-        try:
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=_SHELL_TIMEOUT)
-        except asyncio.TimeoutError:
-            proc.kill()
-            return f"ERROR: command timed out after {_SHELL_TIMEOUT}s"
-        output = stdout.decode(errors="replace").strip()
-        return output or "(no output)"
     except Exception as e:
-        return f"ERROR running command: {e}"
+        return f"ERROR: web search failed: {e}"
 
 
-# ── Ollama tool schema ────────────────────────────────────────────────────────
+# ── Ollama tool schemas ───────────────────────────────────────────────────────
 
 TOOL_SCHEMAS: list[dict] = [
     {
@@ -144,9 +127,9 @@ TOOL_SCHEMAS: list[dict] = [
         "function": {
             "name": "run_shell",
             "description": (
-                "Run a shell command in the workspace directory. "
-                "Allowed: python3, pip, pytest, ruff, black, cargo, go, node, "
-                "git status/log/diff, grep, find, cat, ls."
+                "Run a shell command in an isolated Docker sandbox. "
+                "Any shell command is accepted; the container has no network access "
+                "and is limited to 256 MB RAM and 0.5 CPU."
             ),
             "parameters": {
                 "type": "object",
@@ -157,11 +140,29 @@ TOOL_SCHEMAS: list[dict] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": (
+                "Search the web using DuckDuckGo. Returns title, URL, and snippet "
+                "for up to 5 results. Use this to look up library docs, APIs, "
+                "or patterns before writing code."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
 async def dispatch(name: str, args: dict[str, Any], workspace: Path) -> str:
-    """Call the named tool with args, sandboxed to workspace."""
+    """Route a tool call to its implementation."""
     if name == "read_file":
         return await read_file(workspace, args["path"])
     if name == "write_file":
@@ -170,4 +171,6 @@ async def dispatch(name: str, args: dict[str, Any], workspace: Path) -> str:
         return await list_dir(workspace, args.get("path", "."))
     if name == "run_shell":
         return await run_shell(workspace, args["command"])
+    if name == "web_search":
+        return await web_search(args["query"])
     return f"ERROR: unknown tool {name!r}"

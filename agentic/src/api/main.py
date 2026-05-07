@@ -156,6 +156,16 @@ try:
 except Exception as _e:
     logger.warning(f"Skipping WebSocket router: {_e}")
 
+# MCP server — mounted at /mcp (SSE transport)
+# Clients connect via: GET /mcp/sse
+# Messages sent via:   POST /mcp/messages/
+try:
+    from ..gryphgen_mcp.gryphgen_server import create_sse_app as _create_mcp_sse
+    app.mount("/mcp", _create_mcp_sse())
+    logger.info("MCP server mounted at /mcp/sse")
+except Exception as _e:
+    logger.warning(f"Skipping MCP server: {_e}")
+
 
 if __name__ == "__main__":
     import uvicorn
