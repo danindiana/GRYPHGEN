@@ -1,0 +1,20 @@
+digraph git_commit_history {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#6688ff"
+           label="GRYPHGEN  git log --oneline  main branch" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=2 color="#6688ff"]
+
+    c0 [label="2562930\ndocs: session log\n2026-05-07T03:48Z\nv1 e2e test 12/12" fillcolor="#0d0d1a" color="#444488" fontcolor="#aaaaff"]
+    c1 [label="bff6a87\nfeat(wizard): gg-wizard\nRatatui TUI onboarding\nfor api.grug.ai" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+    c2 [label="d05e569\nfeat(agent): MCP\nDocker sandbox\nweb_search tool" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88"]
+    c3 [label="dff1c9d\ntest: fix 3 failing\n+ sandbox/tools\nrunner coverage" fillcolor="#001a0d" color="#00cc66" fontcolor="#00cc66"]
+    c4 [label="8137e29\ndocs: test audit\n13 passed  3 failed\n401 auth mismatch" fillcolor="#0d0d1a" color="#6688ff" fontcolor="#6688ff"]
+    c5 [label="d2fc2db\nfeat(ollama-duel)\nworkspace + MCP\nfilesystem enabled" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600"]
+    c6 [label="1eb7901\nfeat(wizard)\nagent trace steps\ntool · timing · result" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+    c7 [label="29175d4\nfix(agent)\nsystem prompt\nnull args  logging" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    c8 [label="8673486\ndocs(diagrams)\n5 arch diagrams\nGRYPHGEN level" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+    c9 [label="53cb214\ndocs(diagrams)\n5 project diagrams\nsession level" fillcolor="#0d001a" color="#aa00ff" fontcolor="#aa00ff"]
+    HEAD [label="HEAD\nmain\n→ origin/main" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+
+    c0 -> c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> c7 -> c8 -> c9 -> HEAD
+}

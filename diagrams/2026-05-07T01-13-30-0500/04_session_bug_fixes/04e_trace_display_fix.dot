@@ -1,0 +1,28 @@
+digraph trace_display_fix {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ffff"
+           label="Bug Fix 5  —  Wizard Trace Display  (missing per-step details)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    server_trace [label="AgentRunResponse.trace\n[{step:1,tool:'list_dir',\n  result:'src/ wizard/ ...',\n  elapsed_s:1.23},\n {step:2,...}]" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+
+    subgraph cluster_before {
+        label="Before Fix  (wizard/src/)" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        struct_before [label="api.rs  AgentStep {\n    step: Option<u32>\n    tool: Option<String>\n    // result field MISSING\n    elapsed_s: Option<f64>\n}" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=note]
+        render_before [label="app.rs\n\"─── 3 steps ───\"\n(just a count header,\nno step details shown)" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300" shape=note]
+    }
+
+    subgraph cluster_after {
+        label="After Fix  (wizard/src/)" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        struct_after [label="api.rs  AgentStep {\n    step: Option<u32>\n    tool: Option<String>\n    result: Option<String>  // ADDED\n    elapsed_s: Option<f64>\n}" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+        render_after [label="app.rs  for step in trace {\n  \"─── step 1 · list_dir (1.23s) ───\n  src/ wizard/ ...[truncated 300]\n\"\n  \"─── step 2 · read_file (0.87s) ───\n  ...\n\"}" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33" shape=note]
+        truncate [label="Truncation safety:\nif res.len() > 300 {\n  format!('{}…', &res[..300])\n}" fillcolor="#001a0d" color="#009922" fontcolor="#009922" shape=note]
+    }
+
+    server_trace -> struct_before [label="result dropped\n(field absent)" color="#ff0044" fontcolor="#ff0044"]
+    struct_before -> render_before [color="#ff3300" fontcolor="#ff3300"]
+    render_before -> struct_after [label="fix: add result field" color="#ffff00" fontcolor="#ffff00" style=dashed]
+    server_trace -> struct_after [label="result deserialized" color="#00ff41" fontcolor="#00ff41"]
+    struct_after -> render_after [color="#00cc33" fontcolor="#00cc33"]
+    render_after -> truncate [color="#009922" fontcolor="#009922" style=dashed]
+}

@@ -1,0 +1,29 @@
+digraph agent_prose_fix {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ffff00"
+           label="Bug Fix 3  —  Agent Returns Prose Instead of Tool Calls" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_before {
+        label="Before: Passive System Prompt" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        old_prompt [label="\"You are a helpful agent.\nUse tools when appropriate.\nPlan your approach first.\"" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=note]
+        devstral_before [label="devstral:24b output\n\"I will analyze this task.\nFirst, I would list the files...\nThen I would read...\"" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300" shape=note]
+        trace_empty [label="tool_calls = []\ntrace = []\n(zero steps executed)" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044"]
+    }
+
+    subgraph cluster_after {
+        label="After: Imperative System Prompt" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        new_prompt [label="\"You MUST use tools for every action.\nNEVER describe what you would do — DO IT.\nNEVER ask the user a question.\nCall list_dir IMMEDIATELY as first action.\"" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+        devstral_after [label="devstral:24b output\ntool_calls: [{name: 'list_dir',\n  arguments: {path: '.'}}]" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33" shape=note]
+        trace_full [label="tool_calls → dispatch\ntrace: [{step:1,tool:'list_dir',...},\n        {step:2,tool:'read_file',...}]" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    }
+
+    root [label="Root Cause\nLLMs default to\ndescriptive mode unless\nexplicitly forced imperative" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00" shape=note]
+
+    old_prompt -> devstral_before [color="#ff3300" fontcolor="#ff3300"]
+    devstral_before -> trace_empty [color="#ff0044" fontcolor="#ff0044"]
+    trace_empty -> root [color="#ffff00" fontcolor="#ffff00" style=dashed]
+    root -> new_prompt [label="rewrite system prompt" color="#00ff41" fontcolor="#00ff41"]
+    new_prompt -> devstral_after [color="#00cc33" fontcolor="#00cc33"]
+    devstral_after -> trace_full [color="#00ff41" fontcolor="#00ff41"]
+}

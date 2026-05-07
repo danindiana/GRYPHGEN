@@ -1,0 +1,37 @@
+digraph storage_layout {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ff88"
+           label="worlock  File System Layout  —  Key Paths" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2 shape=folder]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    home [label="~/ (/home/jeb/)" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88"]
+
+    config_dir [label="~/.config/gryphgen/\nconfig.toml\napi_key · api_url" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88"]
+    local_share [label="~/.local/share/\nollama-duel/\nrolling log files" fillcolor="#001a0d" color="#00cc66" fontcolor="#00cc66"]
+    claude_dir [label="~/.claude/\nprojects/  sessions/\nmemory/" fillcolor="#001a0d" color="#00aa44" fontcolor="#00aa44"]
+    local_bin [label="~/.local/bin/\nclaude v2.1.76" fillcolor="#001a0d" color="#00aa44" fontcolor="#00aa44"]
+
+    docs [label="~/Documents/\nclaude_creations/\n2026-05-06_\ngryphgen-modernization/" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+    gryphgen_repo [label="GRYPHGEN/\n[git repo]\nwizard/ · ollama-duel/\nagentic/ · diagrams/" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+    session_docs [label="session.md\nsession_2026-05-06\nT23-52-34-0500.md" fillcolor="#0d0d1a" color="#6688ff" fontcolor="#6688ff" shape=note]
+
+    programs [label="~/programs/\ngryphgen-agentic/\n[running service]" fillcolor="#1a0800" color="#ff9900" fontcolor="#ff9900"]
+    agentic_env [label=".env\nGRYPHGEN_API_KEYS\nOLLAMA_MODEL" fillcolor="#1a0800" color="#ff6600" fontcolor="#ff6600" shape=note]
+    agentic_venv [label=".venv/\nuvicorn · fastapi\nhttpx · pydantic" fillcolor="#1a0800" color="#ff8800" fontcolor="#ff8800"]
+    agentic_logs [label="logs/\napp.log\naccess.log" fillcolor="#1a0500" color="#ff4400" fontcolor="#ff4400"]
+
+    nvm [label="~/.nvm/\nNode v24.11.1\nnpx (MCP servers)" fillcolor="#0d1a00" color="#88ff00" fontcolor="#88ff00"]
+
+    home -> config_dir [color="#00ff88" fontcolor="#00ff88"]
+    home -> local_share [color="#00cc66" fontcolor="#00cc66"]
+    home -> claude_dir [color="#00aa44" fontcolor="#00aa44"]
+    home -> local_bin [color="#00aa44" fontcolor="#00aa44"]
+    home -> docs [color="#cc00ff" fontcolor="#cc00ff"]
+    home -> programs [color="#ff9900" fontcolor="#ff9900"]
+    home -> nvm [color="#88ff00" fontcolor="#88ff00"]
+    docs -> gryphgen_repo [color="#ff00ff" fontcolor="#ff00ff"]
+    docs -> session_docs [color="#6688ff" fontcolor="#6688ff" style=dashed]
+    programs -> agentic_env [color="#ff6600" fontcolor="#ff6600" style=dashed]
+    programs -> agentic_venv [color="#ff8800" fontcolor="#ff8800"]
+    programs -> agentic_logs [color="#ff4400" fontcolor="#ff4400"]
+}

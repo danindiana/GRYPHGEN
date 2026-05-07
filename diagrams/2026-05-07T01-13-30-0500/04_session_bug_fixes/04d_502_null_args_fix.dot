@@ -1,0 +1,32 @@
+digraph null_args_502_fix {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff6600"
+           label="Bug Fix 4  —  502 Bad Gateway  (null tool arguments)" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    ollama_resp [label="Ollama /api/chat response\ntool_calls: [{name: 'list_dir',\n  arguments: null   ← PROBLEM}]" fillcolor="#1a0500" color="#ff6600" fontcolor="#ff6600" shape=parallelogram]
+
+    subgraph cluster_before {
+        label="Before Fix  (runner.py)" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        old_code [label="raw_args = fn.get('arguments', {})\n# returns None when key exists but null\ntool_args = raw_args  # ← None passed down" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=note]
+        dispatch_crash [label="dispatch('list_dir', None, ws)\nTypeError: argument after **\nmust be a mapping, not NoneType" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300"]
+        resp_502 [label="HTTP 502 Bad Gateway\nFastAPI unhandled exception" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044"]
+    }
+
+    subgraph cluster_after {
+        label="After Fix  (runner.py)" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        new_code [label="raw_args = fn.get('arguments') or {}\nif isinstance(raw_args, str):\n    raw_args = json.loads(raw_args)\ntool_args = raw_args if isinstance(raw_args, dict) else {}" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+        dispatch_ok [label="dispatch('list_dir', {}, ws)\n→ list_dir(path='.', ...)\n→ success" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33"]
+        resp_200 [label="HTTP 200 OK\ntrace populated" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    }
+
+    cases [label="Handled Cases\n① arguments=null  → or {} → {}\n② arguments='{}' (JSON str) → json.loads\n③ arguments={}  (normal) → pass-through" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00" shape=note]
+
+    ollama_resp -> old_code [color="#ff0044" fontcolor="#ff0044"]
+    old_code -> dispatch_crash [color="#ff3300" fontcolor="#ff3300"]
+    dispatch_crash -> resp_502 [color="#ff0044" fontcolor="#ff0044"]
+    resp_502 -> cases [label="fix: harden args" color="#ffff00" fontcolor="#ffff00" style=dashed]
+    cases -> new_code [color="#00ff41" fontcolor="#00ff41"]
+    new_code -> dispatch_ok [color="#00cc33" fontcolor="#00cc33"]
+    dispatch_ok -> resp_200 [color="#00ff41" fontcolor="#00ff41"]
+}

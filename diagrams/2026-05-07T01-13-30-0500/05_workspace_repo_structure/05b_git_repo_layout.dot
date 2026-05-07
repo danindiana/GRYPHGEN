@@ -1,0 +1,37 @@
+digraph git_repo_layout {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff9900"
+           label="Git Repository Layout  —  GRYPHGEN" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_tracked {
+        label="Git-Tracked (GRYPHGEN/.git)" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        agentic [label="agentic/\nFastAPI source\n(synced from live service)" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+        wizard [label="wizard/\nRust TUI source\ngg-wizard crate" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33"]
+        ollama_duel [label="ollama-duel/\nRust TUI source\nActor-Critic crate" fillcolor="#001a0d" color="#009922" fontcolor="#009922"]
+        diagrams [label="diagrams/\nGraphviz DOT+PNG+SVG\n3 timestamped batches" fillcolor="#001a0d" color="#007711" fontcolor="#007711"]
+        cargo_toml [label="Cargo.toml\nworkspace root" fillcolor="#001a0d" color="#005500" fontcolor="#005500" shape=note]
+        gstruct [label="gstruct/\nSYMORQ · SYMORG · SYMAUG\nPython core modules" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    }
+
+    subgraph cluster_untracked {
+        label="Outside Git  (live service)" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        live_svc [label="/home/jeb/programs/\ngryphgen-agentic/\n(no .git — running service)" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=folder]
+        dotenv [label=".env\nAPI keys · model config\n(never committed)" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300" shape=note]
+    }
+
+    subgraph cluster_remote {
+        label="GitHub Remote" fontcolor="#cc00ff" color="#cc00ff" bgcolor="#0d001a" style=rounded penwidth=2
+        gh [label="github.com/danindiana/\nGRYPHGEN\nbranch: main" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+    }
+
+    sync [label="sync flow\ncopy changed files\nagentic/ → GRYPHGEN/agentic/\nthen commit" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00" shape=note]
+
+    live_svc -> sync [color="#ffff00" fontcolor="#ffff00" style=dashed]
+    sync -> agentic [color="#00ff41" fontcolor="#00ff41" style=dashed]
+    agentic -> gh [color="#cc00ff" fontcolor="#cc00ff"]
+    wizard -> gh [color="#cc00ff" fontcolor="#cc00ff"]
+    ollama_duel -> gh [color="#cc00ff" fontcolor="#cc00ff"]
+    diagrams -> gh [color="#cc00ff" fontcolor="#cc00ff"]
+    dotenv -> live_svc [color="#ff3300" fontcolor="#ff3300" style=dashed]
+}

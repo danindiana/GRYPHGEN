@@ -1,0 +1,32 @@
+digraph standard_tier_detail {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ffcc00"
+           label="STANDARD Tier  —  THINKER Brief → CODER  (~15-20s)" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    req [label="reasoning_effort=medium\nprompt · language" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+
+    subgraph cluster_thinker {
+        label="THINKER  (deepseek-r1:14b)" fontcolor="#ffff00" color="#ffff00" bgcolor="#1a1500" style=rounded penwidth=2
+        thinker_prompt [label="System: \"You are a senior software architect.\nProduce a structured brief:\nGOAL: <one sentence>\nFUNCTIONS: <list>\nPATTERNS: <list>\nEDGE_CASES: <list>\"" fillcolor="#1a1500" color="#ffcc00" fontcolor="#ffcc00" shape=note]
+        thinker_call [label="POST :11434/api/generate\ndeepseek-r1:14b\nreasoning tokens consumed" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00"]
+        brief_out [label="Structured Brief\nGOAL · FUNCTIONS\nPATTERNS · EDGE_CASES\n~200-500 tokens" fillcolor="#1a1200" color="#ffdd00" fontcolor="#ffdd00" shape=note]
+    }
+
+    subgraph cluster_coder {
+        label="CODER  (qwen2.5-coder:7b)" fontcolor="#ff9900" color="#ff9900" bgcolor="#1a0d00" style=rounded penwidth=2
+        coder_prompt [label="System: \"You are an expert coder.\nImplement the following spec:\n{brief}\n\nUser task: {prompt}\nLanguage: {language}\"" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900" shape=note]
+        coder_call [label="POST :11436/api/generate\nqwen2.5-coder:7b\nnum_predict: 4096" fillcolor="#1a0d00" color="#ff8800" fontcolor="#ff8800"]
+        code_out [label="Implementation\nfull code · docstrings\ntype hints · tests" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600" shape=note]
+    }
+
+    resp [label="CodeGenerationResponse\ntier: \"standard\"\nbackend_used: \"tandem\"" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=parallelogram]
+
+    req -> thinker_prompt [color="#ffcc00" fontcolor="#ffcc00"]
+    thinker_prompt -> thinker_call [color="#ffff00" fontcolor="#ffff00"]
+    thinker_call -> brief_out [color="#ffdd00" fontcolor="#ffdd00"]
+    brief_out -> coder_prompt [label="inject brief" color="#ff9900" fontcolor="#ff9900"]
+    coder_prompt -> coder_call [color="#ff8800" fontcolor="#ff8800"]
+    coder_call -> code_out [color="#ff6600" fontcolor="#ff6600"]
+    code_out -> resp [color="#00ff41" fontcolor="#00ff41"]
+}

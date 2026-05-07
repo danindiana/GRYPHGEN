@@ -1,0 +1,21 @@
+digraph fast_tier_detail {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff9900"
+           label="FAST Tier  —  Direct Code Generation  (<8s)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    req [label="POST /api/v1/code/generate\nreasoning_effort=none\nprompt · language" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+    router [label="code_generation/router.py\nTier=FAST\nweb_context=False" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+    prompt_build [label="Prompt Construction\nf\"Write {language} code for:\n{prompt}\nReturn only the code.\"" fillcolor="#1a0d00" color="#ff8800" fontcolor="#ff8800" shape=note]
+    ollama_req [label="POST :11436/api/generate\nmodel: qwen2.5-coder:7b\nstream: False\nnum_predict: 4096" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600"]
+    qwen_model [label="qwen2.5-coder:7b\nRTX 3080  GPU 1\n~5 GB VRAM\nspecialized code model" fillcolor="#1a0500" color="#ff4400" fontcolor="#ff4400"]
+    strip [label="Strip markdown fences\n```python → remove\ncode content only" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+    resp [label="CodeGenerationResponse\ncode: str\ntier: \"fast\"\nbackend_used: \"ollama-coder\"\ntokens_used: N\ngeneration_time: Xs" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+
+    req -> router [color="#ff9900" fontcolor="#ff9900"]
+    router -> prompt_build [color="#ff8800" fontcolor="#ff8800"]
+    prompt_build -> ollama_req [color="#ff6600" fontcolor="#ff6600"]
+    ollama_req -> qwen_model [color="#ff4400" fontcolor="#ff4400"]
+    qwen_model -> strip [label="response text" color="#ff9900" fontcolor="#ff9900"]
+    strip -> resp [color="#00ff41" fontcolor="#00ff41"]
+}

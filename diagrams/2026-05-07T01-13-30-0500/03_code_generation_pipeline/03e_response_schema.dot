@@ -1,0 +1,45 @@
+digraph response_schema {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ff88"
+           label="API Response Schemas  —  code/generate + agent/run" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_code_resp {
+        label="CodeGenerationResponse" fontcolor="#ff9900" color="#ff9900" bgcolor="#1a0d00" style=rounded penwidth=2
+        cr_request_id [label="request_id: str\nuuid4()" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+        cr_code [label="code: str\ngenerated source" fillcolor="#1a0d00" color="#ff8800" fontcolor="#ff8800"]
+        cr_language [label="language: str\n\"python\" etc." fillcolor="#1a0d00" color="#ff7700" fontcolor="#ff7700"]
+        cr_model_used [label="model_used: str\n\"devstral:24b\" etc." fillcolor="#1a0d00" color="#ff6600" fontcolor="#ff6600"]
+        cr_tokens [label="tokens_used: int" fillcolor="#1a0d00" color="#ff5500" fontcolor="#ff5500"]
+        cr_time [label="generation_time: float\nseconds" fillcolor="#1a0d00" color="#ff4400" fontcolor="#ff4400"]
+        cr_tier [label="tier: str\nfast|standard|strong" fillcolor="#1a0d00" color="#ff3300" fontcolor="#ff3300"]
+        cr_backend [label="backend_used: str\nollama-coder|tandem" fillcolor="#1a0d00" color="#ff2200" fontcolor="#ff2200"]
+    }
+
+    subgraph cluster_agent_resp {
+        label="AgentRunResponse" fontcolor="#cc00ff" color="#cc00ff" bgcolor="#0d001a" style=rounded penwidth=2
+        ar_output [label="output: str\nfinal answer text" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+        ar_trace [label="trace: list[StepTraceOut]\nstep · tool · args\nresult · elapsed_s" fillcolor="#0d001a" color="#aa00ff" fontcolor="#aa00ff"]
+        ar_steps [label="steps_taken: int" fillcolor="#0d001a" color="#9900ff" fontcolor="#9900ff"]
+        ar_time [label="total_time_s: float" fillcolor="#0d001a" color="#8800ff" fontcolor="#8800ff"]
+        ar_model [label="model: str\n\"devstral:24b\"" fillcolor="#0d001a" color="#7700ff" fontcolor="#7700ff"]
+        ar_truncated [label="truncated: bool\nTrue if max_steps hit" fillcolor="#0d001a" color="#6600ff" fontcolor="#6600ff"]
+    }
+
+    subgraph cluster_wizard_meta {
+        label="ResultMeta  (wizard display)" fontcolor="#00ffff" color="#00ffff" bgcolor="#001a1a" style=rounded penwidth=2
+        rm_tier [label="tier: Option<String>" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+        rm_time [label="gen_time: Option<f64>" fillcolor="#001a1a" color="#00ccff" fontcolor="#00ccff"]
+        rm_tokens [label="tokens: Option<u32>" fillcolor="#001a1a" color="#00aaff" fontcolor="#00aaff"]
+        rm_steps [label="steps: Option<u32>" fillcolor="#001a1a" color="#0088ff" fontcolor="#0088ff"]
+        rm_model [label="model: Option<String>" fillcolor="#001a1a" color="#0066ff" fontcolor="#0066ff"]
+    }
+
+    cr_tier -> rm_tier [color="#00ffff" fontcolor="#00ffff" style=dashed]
+    cr_time -> rm_time [color="#00ccff" fontcolor="#00ccff" style=dashed]
+    cr_tokens -> rm_tokens [color="#00aaff" fontcolor="#00aaff" style=dashed]
+    cr_backend -> rm_model [color="#0088ff" fontcolor="#0088ff" style=dashed]
+    ar_time -> rm_time [color="#00ccff" fontcolor="#00ccff" style=dashed]
+    ar_steps -> rm_steps [color="#0088ff" fontcolor="#0088ff" style=dashed]
+    ar_model -> rm_model [color="#0066ff" fontcolor="#0066ff" style=dashed]
+}

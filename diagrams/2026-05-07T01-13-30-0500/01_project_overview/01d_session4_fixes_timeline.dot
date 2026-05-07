@@ -1,0 +1,41 @@
+digraph session4_fixes_timeline {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ff41"
+           label="Session 4 — Bug Fix Sequence  (chronological)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=2]
+
+    discovery [label="User reports:\n\"error when attempting\nchat completions\"" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=parallelogram]
+
+    inv1 [label="Investigate\nread wizard config\nread service logs" fillcolor="#001a1a" color="#00ccff" fontcolor="#00ccff"]
+    fix1 [label="Fix 1  :8000→:8090\n~/.config/gryphgen/\nconfig.toml" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+
+    inv2 [label="Investigate\ncurl to :8090\n403 Invalid API key" fillcolor="#001a1a" color="#00ccff" fontcolor="#00ccff"]
+    fix2 [label="Fix 2  SHA-256\ncompute hash of key\nappend to .env\nrestart service" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+
+    test1 [label="Test agent run\ntrace=[]  steps=1\nmodel describes\nbut doesn't act" fillcolor="#1a0a00" color="#ff8800" fontcolor="#ff8800" shape=parallelogram]
+    fix3 [label="Fix 3  System Prompt\nImperative rewrite\nNEVER describe\ncall the tool" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+
+    test2 [label="502 Bad Gateway\nafter 1 Ollama call\n656ms — too fast" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=parallelogram]
+    fix4 [label="Fix 4  Null args\nfn.get(\"arguments\") or {}\nhandle str JSON\nadd logger.exception()" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+
+    test3 [label="Trace shows only\n\"─── N steps ───\"\nno per-step detail" fillcolor="#1a1a00" color="#ffff00" fontcolor="#ffff00" shape=parallelogram]
+    fix5a [label="Fix 5a  api.rs\nadd result field\nto AgentStep struct" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    fix5b [label="Fix 5b  app.rs\nrender step loop\ntool · elapsed · result" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    fix5c [label="Fix 5c  Binary path\nworkspace target/\nnot wizard/target/" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33"]
+
+    done [label="All systems\noperational" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=parallelogram]
+
+    discovery -> inv1 [color="#00ccff" fontcolor="#00ccff"]
+    inv1 -> fix1 [color="#00ff41" fontcolor="#00ff41"]
+    fix1 -> inv2 [color="#00ccff" fontcolor="#00ccff"]
+    inv2 -> fix2 [color="#00ff41" fontcolor="#00ff41"]
+    fix2 -> test1 [color="#ff8800" fontcolor="#ff8800"]
+    test1 -> fix3 [color="#00ff41" fontcolor="#00ff41"]
+    fix3 -> test2 [color="#ff0044" fontcolor="#ff0044"]
+    test2 -> fix4 [color="#00ff41" fontcolor="#00ff41"]
+    fix4 -> test3 [color="#ffff00" fontcolor="#ffff00"]
+    test3 -> fix5a [color="#00ff41" fontcolor="#00ff41"]
+    fix5a -> fix5b [color="#00ff41" fontcolor="#00ff41"]
+    fix5b -> fix5c [color="#00cc33" fontcolor="#00cc33"]
+    fix5c -> done [color="#00ff41" fontcolor="#00ff41"]
+}

@@ -1,0 +1,38 @@
+digraph api_key_403_fix {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff00ff"
+           label="Bug Fix 2  —  Invalid API Key  (403 Forbidden)" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    wizard_key [label="Wizard sends\nX-API-Key: grug_YdN-QydiDPq..." fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff" shape=parallelogram]
+
+    subgraph cluster_auth {
+        label="Auth Middleware  (auth/middleware.py)" fontcolor="#ff00ff" color="#ff00ff" bgcolor="#1a001a" style=rounded penwidth=2
+        hash_incoming [label="SHA-256\nhash(incoming_key)" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        compare [label="compare against\nGRYPHGEN_API_KEYS\n(comma-separated hashes)" fillcolor="#1a001a" color="#cc00ff" fontcolor="#cc00ff" shape=diamond]
+    }
+
+    subgraph cluster_before {
+        label="Before Fix (.env)" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        env_before [label="GRYPHGEN_API_KEYS=\nd54aee35...  ← admin key only\nwizard key hash: MISSING" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=note]
+        resp_403 [label="HTTP 403 Forbidden\n{\"detail\":\"Invalid API key\"}" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300"]
+    }
+
+    subgraph cluster_fix {
+        label="Fix Applied" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        sha_calc [label="echo -n 'grug_YdN-...' | sha256sum\n→ 83ecc50bacb9..." fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33" shape=note]
+        env_after [label="GRYPHGEN_API_KEYS=\nd54aee35...,83ecc50b...\nwizard hash APPENDED" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+        svc_restart [label="systemctl restart\ngryphgen-agentic" fillcolor="#001a0d" color="#009922" fontcolor="#009922"]
+        resp_200 [label="HTTP 200 OK\ncode / agent\nresponse" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+    }
+
+    wizard_key -> hash_incoming [color="#cc00ff" fontcolor="#cc00ff"]
+    hash_incoming -> compare [color="#ff00ff" fontcolor="#ff00ff"]
+    compare -> resp_403 [label="no match" color="#ff0044" fontcolor="#ff0044"]
+    compare -> resp_200 [label="match" color="#00ff41" fontcolor="#00ff41" style=dashed]
+    resp_403 -> sha_calc [label="debug: compute hash" color="#ffff00" fontcolor="#ffff00" style=dashed]
+    sha_calc -> env_after [color="#00ff41" fontcolor="#00ff41"]
+    env_after -> svc_restart [color="#009922" fontcolor="#009922"]
+    svc_restart -> resp_200 [color="#00ff41" fontcolor="#00ff41"]
+    env_before -> compare [color="#ff0044" fontcolor="#ff0044" style=dashed]
+}

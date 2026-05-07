@@ -1,0 +1,57 @@
+digraph agentic_python_layout {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ffff"
+           label="agentic/  —  FastAPI Python Package Layout" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    root [label="agentic/src/\nPython package root" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=folder]
+
+    subgraph cluster_api {
+        label="api/" fontcolor="#00ffff" color="#00ffff" bgcolor="#001a1a" style=rounded penwidth=2
+        main [label="main.py\nFastAPI app\n/health\n/api/v1 routers" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+    }
+
+    subgraph cluster_llm {
+        label="llm/" fontcolor="#ff9900" color="#ff9900" bgcolor="#1a0d00" style=rounded penwidth=2
+        generator [label="generator.py\nLLMGenerator\nbackend selection" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+        backends [label="backends/\nollama.py\nanthropic.py\nopenai.py" fillcolor="#1a0800" color="#ff8800" fontcolor="#ff8800"]
+    }
+
+    subgraph cluster_services {
+        label="services/" fontcolor="#cc00ff" color="#cc00ff" bgcolor="#0d001a" style=rounded penwidth=2
+        code_gen [label="code_generation/\nrouter.py · tier select\nfast/standard/strong" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+        agent_svc [label="agent/\nrouter.py\n/api/v1/agent/run" fillcolor="#0d001a" color="#aa00ff" fontcolor="#aa00ff"]
+        stubs [label="automated_testing/\nproject_management/\ndocumentation/\ncollaboration/\nself_improvement/\n(stubs)" fillcolor="#0d001a" color="#7700ff" fontcolor="#7700ff"]
+    }
+
+    subgraph cluster_agent {
+        label="agent/  (runner + tools)" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        runner [label="runner.py\nReAct loop\ndevstral:24b\ntool dispatch" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41"]
+        tools [label="tools.py\nlist_dir · read_file\nwrite_file · run_shell\nweb_search" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33"]
+        docker_sb [label="docker_sandbox.py\nDockerSandbox\npython:3.12-slim\nmem/cpu limits" fillcolor="#001a0d" color="#009922" fontcolor="#009922"]
+    }
+
+    subgraph cluster_auth {
+        label="auth/" fontcolor="#ffff00" color="#ffff00" bgcolor="#1a1500" style=rounded penwidth=2
+        middleware [label="middleware.py\nSHA-256 key check\nX-API-Key header" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00"]
+    }
+
+    subgraph cluster_common {
+        label="common/" fontcolor="#ff6600" color="#ff6600" bgcolor="#1a0a00" style=rounded penwidth=2
+        config [label="config.py\npydantic-settings\nenv var schema" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600"]
+        rate_limit [label="rate_limiter.py\nsliding window\ngenerate:10/60s\nagent:5/300s" fillcolor="#1a0800" color="#ff4400" fontcolor="#ff4400"]
+    }
+
+    root -> main [color="#00ffff" fontcolor="#00ffff"]
+    root -> generator [color="#ff9900" fontcolor="#ff9900"]
+    generator -> backends [color="#ff8800" fontcolor="#ff8800"]
+    root -> code_gen [color="#cc00ff" fontcolor="#cc00ff"]
+    root -> agent_svc [color="#aa00ff" fontcolor="#aa00ff"]
+    root -> stubs [color="#7700ff" fontcolor="#7700ff"]
+    agent_svc -> runner [color="#00ff41" fontcolor="#00ff41"]
+    runner -> tools [color="#00cc33" fontcolor="#00cc33"]
+    tools -> docker_sb [color="#009922" fontcolor="#009922"]
+    root -> middleware [color="#ffff00" fontcolor="#ffff00"]
+    root -> config [color="#ff6600" fontcolor="#ff6600"]
+    root -> rate_limit [color="#ff4400" fontcolor="#ff4400"]
+}

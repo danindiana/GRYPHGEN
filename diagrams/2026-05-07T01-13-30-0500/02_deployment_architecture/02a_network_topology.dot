@@ -1,0 +1,44 @@
+digraph network_topology {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ffff"
+           label="worlock — Network Topology + UFW Rules" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    internet [label="Internet / WAN" fillcolor="#111111" color="#444444" fontcolor="#888888" shape=cloud]
+    cf_edge [label="Cloudflare Edge\nhttps://api.grug.ai\nTLS termination" fillcolor="#1a0a00" color="#ff8800" fontcolor="#ff8800"]
+    lan [label="LAN  192.168.1.0/24\nDHCP" fillcolor="#111111" color="#444444" fontcolor="#888888" shape=cloud]
+    pia [label="PIA VPN\nWireGuard\nautostarts" fillcolor="#0d001a" color="#8800ff" fontcolor="#8800ff" shape=cloud]
+
+    subgraph cluster_host {
+        label="worlock  (192.168.1.151)" fontcolor="#00ffff" color="#00ffff" bgcolor="#001111" style=rounded penwidth=2
+
+        enp7s0 [label="enp7s0\n192.168.1.151/24\nETH metric=100" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+        wgpia0 [label="wgpia0\nPIA WireGuard\nVPN IP varies" fillcolor="#0d001a" color="#8800ff" fontcolor="#8800ff"]
+
+        subgraph cluster_ufw {
+            label="UFW Rules" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+            rule_ssh [label="SSH :22222\nLAN + VPN only\npubkey auth" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044"]
+            rule_8090 [label=":8090 agentic\nLAN only\n(+ CF tunnel)" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300"]
+            rule_3000 [label=":3000 open-webui\nLAN only" fillcolor="#1a0000" color="#ff2200" fontcolor="#ff2200"]
+            rule_19999 [label=":19999 netdata\nLAN only" fillcolor="#1a0000" color="#ff1100" fontcolor="#ff1100"]
+            rule_out [label="outbound\nenp7s0 allow\ntun0 off by default" fillcolor="#1a0500" color="#ff6600" fontcolor="#ff6600"]
+        }
+
+        cf_tunnel_proc [label="cloudflared\nprocess\nlocalhost:8090" fillcolor="#1a0800" color="#ff9900" fontcolor="#ff9900"]
+        svc_8090 [label="gryphgen-agentic\n:8090\nbind 127.0.0.1" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        svc_11434 [label="ollama\n:11434\nbind 127.0.0.1" fillcolor="#1a1a00" color="#ffff00" fontcolor="#ffff00"]
+        svc_11436 [label="ollama-coder\n:11436" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+    }
+
+    internet -> cf_edge [label="HTTPS 443" color="#ff8800" fontcolor="#ff8800"]
+    cf_edge -> cf_tunnel_proc [label="tunnel" color="#ff9900" fontcolor="#ff9900"]
+    lan -> enp7s0 [color="#00ffff" fontcolor="#00ffff"]
+    pia -> wgpia0 [color="#8800ff" fontcolor="#8800ff"]
+    enp7s0 -> rule_ssh [color="#ff0044" fontcolor="#ff0044" style=dashed]
+    enp7s0 -> rule_8090 [color="#ff3300" fontcolor="#ff3300" style=dashed]
+    enp7s0 -> rule_3000 [color="#ff2200" fontcolor="#ff2200" style=dashed]
+    wgpia0 -> rule_ssh [color="#ff0044" fontcolor="#ff0044" style=dashed]
+    cf_tunnel_proc -> svc_8090 [color="#ff00ff" fontcolor="#ff00ff"]
+    svc_8090 -> svc_11434 [color="#ffff00" fontcolor="#ffff00"]
+    svc_8090 -> svc_11436 [color="#ff9900" fontcolor="#ff9900"]
+}

@@ -1,0 +1,31 @@
+digraph systemd_services {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff00ff"
+           label="Systemd Services  —  worlock" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    network_online [label="network-online.target" fillcolor="#0d0d1a" color="#6688ff" fontcolor="#6688ff"]
+
+    ollama [label="ollama.service\nType=simple\nRestart=on-failure\nUser=ollama\nOverride: /etc/systemd/system/\nollama.service.d/override.conf" fillcolor="#1a1a00" color="#ffff00" fontcolor="#ffff00"]
+    ollama_env [label="OLLAMA_HOST=127.0.0.1\nOLLAMA_KEEP_ALIVE=5m\nOLLAMA_MAX_LOADED_MODELS=1\nOLLAMA_NUM_PARALLEL=1\nCUDA_VISIBLE_DEVICES=0,1" fillcolor="#1a1500" color="#ffcc00" fontcolor="#ffcc00" shape=note]
+
+    agentic [label="gryphgen-agentic.service\nType=simple\nRestart=always\nUser=jeb\nWorkingDir=/programs/\ngryphgen-agentic" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+    agentic_env [label="EnvironmentFile=\n/programs/gryphgen-agentic/.env\nGRYPHGEN_LLM_BACKEND=ollama\nOLLAMA_MODEL=devstral:24b\nGRYPHGEN_API_KEYS=<hashes>" fillcolor="#1a001a" color="#cc00ff" fontcolor="#cc00ff" shape=note]
+    agentic_exec [label="ExecStart=\n.venv/bin/uvicorn\nsrc.api.main:app\n--host 127.0.0.1\n--port 8090" fillcolor="#1a001a" color="#9900ff" fontcolor="#9900ff" shape=note]
+
+    cloudflared [label="cloudflared.service\nCloudflare tunnel\napi.grug.ai → :8090" fillcolor="#1a0800" color="#ff9900" fontcolor="#ff9900"]
+
+    piavpn [label="piavpn.service\nPIA WireGuard\nwgpia0 interface" fillcolor="#0d001a" color="#8800ff" fontcolor="#8800ff"]
+
+    openwebui [label="open-webui\n(Docker Compose)\nhost-net  :3000" fillcolor="#0d0d1a" color="#6688ff" fontcolor="#6688ff"]
+
+    network_online -> ollama [color="#ffff00" fontcolor="#ffff00"]
+    network_online -> agentic [color="#ff00ff" fontcolor="#ff00ff"]
+    network_online -> cloudflared [color="#ff9900" fontcolor="#ff9900"]
+    network_online -> piavpn [color="#8800ff" fontcolor="#8800ff"]
+    ollama -> agentic [label="After=\nWants=" color="#ff00ff" fontcolor="#ff00ff"]
+    agentic -> cloudflared [label="After=" color="#ff9900" fontcolor="#ff9900"]
+    ollama_env -> ollama [color="#ffcc00" fontcolor="#ffcc00" style=dashed]
+    agentic_env -> agentic [color="#cc00ff" fontcolor="#cc00ff" style=dashed]
+    agentic_exec -> agentic [color="#9900ff" fontcolor="#9900ff" style=dashed]
+}

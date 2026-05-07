@@ -1,0 +1,43 @@
+digraph diagram_generation_pipeline {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ffff00"
+           label="Diagram Generation Pipeline  —  How These Diagrams Were Made" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    user_req [label="User Request\n\"generate 5 graphviz diagrams\ndark/neon theme\nfor session features\"" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+
+    subgraph cluster_authoring {
+        label="Authoring (Claude)" fontcolor="#ffff00" color="#ffff00" bgcolor="#1a1500" style=rounded penwidth=2
+        write_dot [label="Write tool\ncreate *.dot files\none per concept\ntimestamped folder" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00"]
+        style_rules [label="Style Rules\nbgcolor=#0d0d0d\nneon palette:\ncyan · magenta\ngreen · orange\npurple · yellow" fillcolor="#1a1200" color="#ffdd00" fontcolor="#ffdd00" shape=note]
+    }
+
+    subgraph cluster_render {
+        label="Rendering (Graphviz)" fontcolor="#ff9900" color="#ff9900" bgcolor="#1a0d00" style=rounded penwidth=2
+        find_cmd [label="find diagrams/ -name '*.dot'\n-exec dot -Tpng -o {}.png\n      dot -Tsvg -o {}.svg \\;" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900" shape=note]
+        png [label="*.png\n1800×N px\nrasterized" fillcolor="#1a0800" color="#ff8800" fontcolor="#ff8800"]
+        svg [label="*.svg\nvector\nscalable" fillcolor="#1a0500" color="#ff6600" fontcolor="#ff6600"]
+    }
+
+    subgraph cluster_batches {
+        label="Three Diagram Batches" fontcolor="#cc00ff" color="#cc00ff" bgcolor="#0d001a" style=rounded penwidth=2
+        batch1 [label="01-04-49-0500/\n5 GRYPHGEN diagrams\n(system arch level)" fillcolor="#0d001a" color="#cc00ff" fontcolor="#cc00ff"]
+        batch2 [label="01-08-32-0500/\n5 project diagrams\n(session overview)" fillcolor="#0d001a" color="#aa00ff" fontcolor="#aa00ff"]
+        batch3 [label="01-13-30-0500/\n25 diagrams (5×5)\ndetailed subsystems" fillcolor="#0d001a" color="#9900ff" fontcolor="#9900ff"]
+    }
+
+    git_commit [label="git add diagrams/\ngit commit -m 'diagrams: ...'\ngit push origin main" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+    github [label="github.com/danindiana/GRYPHGEN\ndiagrams/ folder\npublicly visible" fillcolor="#001a0d" color="#009922" fontcolor="#009922"]
+
+    user_req -> write_dot [color="#ffff00" fontcolor="#ffff00"]
+    write_dot -> style_rules [color="#ffdd00" fontcolor="#ffdd00" style=dashed]
+    write_dot -> find_cmd [color="#ff9900" fontcolor="#ff9900"]
+    find_cmd -> png [color="#ff8800" fontcolor="#ff8800"]
+    find_cmd -> svg [color="#ff6600" fontcolor="#ff6600"]
+    png -> batch1 [color="#cc00ff" fontcolor="#cc00ff" style=dashed]
+    svg -> batch1 [color="#cc00ff" fontcolor="#cc00ff" style=dashed]
+    batch1 -> batch2 [color="#aa00ff" fontcolor="#aa00ff"]
+    batch2 -> batch3 [color="#9900ff" fontcolor="#9900ff"]
+    batch3 -> git_commit [color="#00ff41" fontcolor="#00ff41"]
+    git_commit -> github [color="#009922" fontcolor="#009922"]
+}

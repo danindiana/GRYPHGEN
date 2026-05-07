@@ -1,0 +1,52 @@
+digraph session3_ollama_duel {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff6600"
+           label="Session 3 — ollama-duel  Tokio Async Architecture" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_main {
+        label="main.rs  (tokio::main)" fontcolor="#00ffff" color="#00ffff" bgcolor="#001a1a" style=rounded penwidth=2
+        cli [label="clap CLI\n--actor --critic\n--ollama --config" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+        tracing [label="tracing_appender\n~/.local/share/\nollama-duel/\nrolling daily log" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88" shape=note]
+        terminal [label="crossterm\nraw mode\nalternate screen" fillcolor="#001a1a" color="#00ccff" fontcolor="#00ccff"]
+    }
+    subgraph cluster_app {
+        label="app.rs  (App state + event loop)" fontcolor="#ff6600" color="#ff6600" bgcolor="#1a0a00" style=rounded penwidth=2
+        event_loop [label="tokio::select!\ncrossterm events\nmpsc rx  16ms tick" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600"]
+        mcp_init [label="MCP init\nspawn servers\ntool registry" fillcolor="#1a0a00" color="#ff8800" fontcolor="#ff8800"]
+        submit [label="on_submit()\nspawn tokio task\nrun_actor_critic()" fillcolor="#1a0500" color="#ff4400" fontcolor="#ff4400"]
+        conv_scroll [label="conv_scroll: u16\nu16::MAX = bottom\nBgEvent scroll" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600" shape=note]
+    }
+    subgraph cluster_bg {
+        label="actor_critic.rs  (background task)" fontcolor="#ff00ff" color="#ff00ff" bgcolor="#1a001a" style=rounded penwidth=2
+        bg_tx [label="UnboundedSender\nBgEvent\nchannel(64)" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        actor_loop [label="run_actor()\nOllamaClient::chat()\ntool_rounds loop" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        critic_loop [label="run_critic()\nchat() stream=true\nparse_critic_json()" fillcolor="#1a001a" color="#cc00ff" fontcolor="#cc00ff"]
+        revision [label="revision loop\n0..=max_revision_rounds\nscore < threshold?" fillcolor="#0d001a" color="#9900ff" fontcolor="#9900ff" shape=diamond]
+    }
+    subgraph cluster_ui {
+        label="ui.rs  (Ratatui render)" fontcolor="#00ffff" color="#444444" bgcolor="#111111" style=rounded penwidth=1
+        title_bar [label="title bar\nMCP:N  model names" fillcolor="#111111" color="#00ffff" fontcolor="#00ffff"]
+        mcp_panel [label="MCP sidebar\n✓ server (N tools)" fillcolor="#111111" color="#cc00ff" fontcolor="#cc00ff"]
+        conv_panel [label="conversation panel\nActorStreaming\nCriticStreaming\nFinalAnswer" fillcolor="#111111" color="#ff6600" fontcolor="#ff6600"]
+        input_box [label="input box\nNormal / Editing\ni=edit  Enter=submit" fillcolor="#111111" color="#00ff88" fontcolor="#00ff88"]
+    }
+
+    cli -> terminal [color="#00ccff" fontcolor="#00ccff"]
+    cli -> tracing [color="#00ff88" fontcolor="#00ff88" style=dashed]
+    terminal -> event_loop [color="#ff6600" fontcolor="#ff6600"]
+    event_loop -> mcp_init [label="startup" color="#ff8800" fontcolor="#ff8800"]
+    event_loop -> submit [label="Enter key" color="#ff4400" fontcolor="#ff4400"]
+    event_loop -> conv_scroll [color="#ff6600" fontcolor="#ff6600" style=dashed]
+    submit -> actor_loop [color="#ff00ff" fontcolor="#ff00ff"]
+    actor_loop -> bg_tx [label="ActorChunk\nToolCall" color="#ff00ff" fontcolor="#ff00ff"]
+    actor_loop -> critic_loop [label="final response" color="#cc00ff" fontcolor="#cc00ff"]
+    critic_loop -> bg_tx [label="CriticChunk\nCriticDone" color="#cc00ff" fontcolor="#cc00ff"]
+    bg_tx -> revision [color="#9900ff" fontcolor="#9900ff"]
+    revision -> actor_loop [label="revise" color="#ff00ff" fontcolor="#ff00ff"]
+    revision -> event_loop [label="ProcessingDone" color="#00ff41" fontcolor="#00ff41"]
+    event_loop -> title_bar [color="#00ffff" fontcolor="#00ffff" style=dashed]
+    event_loop -> mcp_panel [color="#cc00ff" fontcolor="#cc00ff" style=dashed]
+    event_loop -> conv_panel [color="#ff6600" fontcolor="#ff6600" style=dashed]
+    event_loop -> input_box [color="#00ff88" fontcolor="#00ff88" style=dashed]
+}

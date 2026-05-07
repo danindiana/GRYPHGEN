@@ -1,0 +1,45 @@
+digraph session1_api_layer {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#00ffff"
+           label="Session 1 — gryphgen-agentic FastAPI Layer" labelloc=t fontsize=18 pad=0.5 rankdir=TB]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_app {
+        label="FastAPI Application" fontcolor="#00ffff" color="#00ffff" bgcolor="#001a1a" style=rounded penwidth=2
+        main [label="api/main.py\napp = FastAPI()\nCORS · logging middleware" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+        health [label="GET /health\nstatus · service · version" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88"]
+    }
+    subgraph cluster_routers {
+        label="Service Routers" fontcolor="#ff00ff" color="#ff00ff" bgcolor="#1a001a" style=rounded penwidth=2
+        code_router [label="POST /api/v1/code/generate\nservices/code_generation/router.py" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        agent_router [label="POST /api/v1/agent/run\nservices/agent/router.py" fillcolor="#1a001a" color="#cc00ff" fontcolor="#cc00ff"]
+        search_router [label="GET /api/v1/tools/search\ntools/web_search.py" fillcolor="#1a001a" color="#9900ff" fontcolor="#9900ff"]
+    }
+    subgraph cluster_auth {
+        label="Auth + Rate Limit" fontcolor="#ff6600" color="#ff6600" bgcolor="#1a0a00" style=rounded penwidth=2
+        apikey [label="require_api_key\nX-API-Key → SHA-256\nvs GRYPHGEN_API_KEYS" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600" shape=hexagon]
+        ratelimit [label="generate_limiter  10/60s\nagent_limiter     5/300s\nsliding window" fillcolor="#1a0500" color="#ff4400" fontcolor="#ff4400" shape=hexagon]
+    }
+    subgraph cluster_llm {
+        label="LLM Backends" fontcolor="#ffff00" color="#ffff00" bgcolor="#1a1a00" style=rounded penwidth=2
+        generator [label="llm/generator.py\nLLMGenerator\nGRYPHGEN_LLM_BACKEND" fillcolor="#1a1a00" color="#ffff00" fontcolor="#ffff00"]
+        tandem [label="llm/tandem.py\nTandemPipeline\nTHINKER → CODER" fillcolor="#1a1500" color="#ffcc00" fontcolor="#ffcc00"]
+        ollama_b [label="backends/ollama.py\n:11434  /  :11436" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+        anthropic_b [label="backends/anthropic.py\nclaude-sonnet-4-6\nprompt caching" fillcolor="#0d001a" color="#aa00ff" fontcolor="#aa00ff"]
+        openai_b [label="backends/openai.py\ngpt-4o" fillcolor="#001a0d" color="#00ff88" fontcolor="#00ff88"]
+    }
+
+    main -> health [color="#00ff88" fontcolor="#00ff88" style=dashed]
+    main -> code_router [color="#ff00ff" fontcolor="#ff00ff"]
+    main -> agent_router [color="#cc00ff" fontcolor="#cc00ff"]
+    main -> search_router [color="#9900ff" fontcolor="#9900ff"]
+    code_router -> apikey [color="#ff6600" fontcolor="#ff6600"]
+    agent_router -> apikey [color="#ff6600" fontcolor="#ff6600"]
+    apikey -> ratelimit [color="#ff4400" fontcolor="#ff4400"]
+    ratelimit -> generator [color="#ffff00" fontcolor="#ffff00"]
+    generator -> tandem [color="#ffcc00" fontcolor="#ffcc00"]
+    generator -> ollama_b [color="#ff9900" fontcolor="#ff9900"]
+    generator -> anthropic_b [color="#aa00ff" fontcolor="#aa00ff" style=dashed]
+    generator -> openai_b [color="#00ff88" fontcolor="#00ff88" style=dashed]
+    tandem -> ollama_b [color="#ff9900" fontcolor="#ff9900"]
+}

@@ -1,0 +1,32 @@
+digraph wrong_port_fix {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff6600"
+           label="Bug Fix 1  —  Wrong Port (8000 → 8090)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    symptom [label="Symptom\ngg-wizard shows error\non chat completion\nattempt" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=parallelogram]
+
+    subgraph cluster_before {
+        label="Before Fix" fontcolor="#ff0044" color="#ff0044" bgcolor="#1a0000" style=rounded penwidth=2
+        cfg_before [label="~/.config/gryphgen/config.toml\napi_url = \"http://localhost:8000\"" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=note]
+        port8000 [label="Port 8000\n(nothing listening)" fillcolor="#1a0000" color="#ff3300" fontcolor="#ff3300" shape=cylinder]
+        conn_refused [label="Connection refused\n/ ECONNREFUSED" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=diamond]
+    }
+
+    subgraph cluster_after {
+        label="After Fix" fontcolor="#00ff41" color="#00ff41" bgcolor="#001a0d" style=rounded penwidth=2
+        cfg_after [label="~/.config/gryphgen/config.toml\napi_url = \"http://localhost:8090\"" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+        port8090 [label="Port 8090\ngryphgen-agentic\nFastAPI / uvicorn" fillcolor="#001a0d" color="#00cc33" fontcolor="#00cc33" shape=cylinder]
+        conn_ok [label="200 OK\ncode / agent\nresponse" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=diamond]
+    }
+
+    root_cause [label="Root Cause\nService migrated to :8090\nbut config not updated" fillcolor="#1a1a00" color="#ffff00" fontcolor="#ffff00" shape=note]
+
+    symptom -> cfg_before [color="#ff0044" fontcolor="#ff0044"]
+    cfg_before -> port8000 [color="#ff3300" fontcolor="#ff3300"]
+    port8000 -> conn_refused [color="#ff0044" fontcolor="#ff0044"]
+    conn_refused -> root_cause [color="#ffff00" fontcolor="#ffff00" style=dashed]
+    root_cause -> cfg_after [label="fix: edit config.toml" color="#00ff41" fontcolor="#00ff41"]
+    cfg_after -> port8090 [color="#00cc33" fontcolor="#00cc33"]
+    port8090 -> conn_ok [color="#00ff41" fontcolor="#00ff41"]
+}

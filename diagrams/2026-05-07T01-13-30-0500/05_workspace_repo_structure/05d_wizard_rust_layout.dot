@@ -1,0 +1,45 @@
+digraph wizard_rust_layout {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ff00ff"
+           label="wizard/  —  Rust Crate Layout  (gg-wizard)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    subgraph cluster_src {
+        label="wizard/src/" fontcolor="#ff00ff" color="#ff00ff" bgcolor="#1a001a" style=rounded penwidth=2
+        main [label="main.rs\nentry point\nApp::new()\nTerminal loop" fillcolor="#1a001a" color="#ff00ff" fontcolor="#ff00ff"]
+        app [label="app.rs\nApp struct\nstate machine\nInputMode enum\nrender_result()" fillcolor="#1a001a" color="#cc00ff" fontcolor="#cc00ff"]
+        api [label="api.rs\nAPI client (ureq)\nCodeGenResponse\nAgentRunResponse\nAgentStep { result }" fillcolor="#1a001a" color="#aa00ff" fontcolor="#aa00ff"]
+        ui [label="ui.rs\nRatatui widgets\ndraw_ui()\nparagraphs · borders" fillcolor="#1a001a" color="#9900ff" fontcolor="#9900ff"]
+        config_mod [label="config.rs\nConfig struct\nload from TOML\napi_url · api_key" fillcolor="#1a001a" color="#8800ff" fontcolor="#8800ff"]
+    }
+
+    subgraph cluster_screens {
+        label="TUI Screens" fontcolor="#00ffff" color="#00ffff" bgcolor="#001a1a" style=rounded penwidth=2
+        home [label="Home\n[1] Code Gen\n[2] Agent Task\n[3] Settings" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff"]
+        code [label="Code Gen\nprompt input\nlanguage select\ntier select" fillcolor="#001a1a" color="#00ccff" fontcolor="#00ccff"]
+        agent [label="Agent Task\ntask description\nmax_steps slider" fillcolor="#001a1a" color="#00aaff" fontcolor="#00aaff"]
+        result [label="Result\nper-step trace\ntool·elapsed·output\nfinal answer" fillcolor="#001a1a" color="#0088ff" fontcolor="#0088ff"]
+    }
+
+    subgraph cluster_deps {
+        label="Key Dependencies (Cargo.toml)" fontcolor="#ff6600" color="#ff6600" bgcolor="#1a0a00" style=rounded penwidth=2
+        ratatui [label="ratatui = \"0.28\"\nTerminal UI widgets" fillcolor="#1a0a00" color="#ff6600" fontcolor="#ff6600"]
+        ureq [label="ureq = {features=[json]}\nsync HTTP client" fillcolor="#1a0800" color="#ff4400" fontcolor="#ff4400"]
+        serde [label="serde + serde_json\nJSON de/serialization" fillcolor="#1a0500" color="#ff2200" fontcolor="#ff2200"]
+        toml_dep [label="toml\nconfig file parsing" fillcolor="#1a0300" color="#ff0000" fontcolor="#ff0000"]
+    }
+
+    main -> app [color="#cc00ff" fontcolor="#cc00ff"]
+    app -> api [color="#aa00ff" fontcolor="#aa00ff"]
+    app -> ui [color="#9900ff" fontcolor="#9900ff"]
+    app -> config_mod [color="#8800ff" fontcolor="#8800ff"]
+    app -> home [color="#00ffff" fontcolor="#00ffff"]
+    home -> code [color="#00ccff" fontcolor="#00ccff"]
+    home -> agent [color="#00aaff" fontcolor="#00aaff"]
+    code -> result [color="#0088ff" fontcolor="#0088ff"]
+    agent -> result [color="#0088ff" fontcolor="#0088ff"]
+    app -> ratatui [color="#ff6600" fontcolor="#ff6600" style=dashed]
+    api -> ureq [color="#ff4400" fontcolor="#ff4400" style=dashed]
+    api -> serde [color="#ff2200" fontcolor="#ff2200" style=dashed]
+    config_mod -> toml_dep [color="#ff0000" fontcolor="#ff0000" style=dashed]
+}

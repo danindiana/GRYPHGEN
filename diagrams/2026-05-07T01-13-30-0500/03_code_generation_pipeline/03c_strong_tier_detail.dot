@@ -1,0 +1,25 @@
+digraph strong_tier_detail {
+    graph [bgcolor="#0d0d0d" fontname="Courier New" fontcolor="#ffff00"
+           label="STRONG Tier  —  Think → Code → Review → Revise  (~30-90s)" labelloc=t fontsize=18 pad=0.5 rankdir=LR]
+    node [fontname="Courier New" fontsize=10 style="filled,rounded" penwidth=2]
+    edge [fontname="Courier New" fontsize=9 penwidth=1.5]
+
+    req [label="reasoning_effort=high\nauth · security\ncomplex multi-file" fillcolor="#001a1a" color="#00ffff" fontcolor="#00ffff" shape=parallelogram]
+    t1 [label="THINKER  Pass 1\ndeepseek-r1:14b\nAnalyse requirements\nSecurity considerations\nArchitecture plan" fillcolor="#1a1500" color="#ffff00" fontcolor="#ffff00"]
+    c1 [label="CODER  Pass 1\nqwen2.5-coder:7b\nImplement from plan\nFull implementation" fillcolor="#1a0d00" color="#ff9900" fontcolor="#ff9900"]
+    t2 [label="THINKER  Pass 2\ndeepseek-r1:14b\nSecurity review\nBug hunt\nEdge case analysis" fillcolor="#1a1500" color="#ffdd00" fontcolor="#ffdd00"]
+    revise_check [label="Issues found?" fillcolor="#1a0000" color="#ff0044" fontcolor="#ff0044" shape=diamond]
+    c2 [label="CODER  Pass 2\nqwen2.5-coder:7b\nFix issues\nApply review feedback\n(up to 2 cycles)" fillcolor="#1a0d00" color="#ffaa00" fontcolor="#ffaa00"]
+    final [label="Final Code\nsecurity-reviewed\nedge-cases handled" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=note]
+    resp [label="CodeGenerationResponse\ntier: \"strong\"\ngeneration_time: ~30-90s" fillcolor="#001a0d" color="#00ff41" fontcolor="#00ff41" shape=parallelogram]
+
+    req -> t1 [color="#ffff00" fontcolor="#ffff00"]
+    t1 -> c1 [label="architecture plan" color="#ff9900" fontcolor="#ff9900"]
+    c1 -> t2 [label="draft code" color="#ffdd00" fontcolor="#ffdd00"]
+    t2 -> revise_check [color="#ff0044" fontcolor="#ff0044"]
+    revise_check -> c2 [label="yes" color="#ffaa00" fontcolor="#ffaa00"]
+    revise_check -> final [label="no / max cycles" color="#00ff41" fontcolor="#00ff41"]
+    c2 -> t2 [label="revised code\n(cycle 2)" color="#ffdd00" fontcolor="#ffdd00" style=dashed]
+    c2 -> final [label="accepted" color="#00ff41" fontcolor="#00ff41"]
+    final -> resp [color="#00ff41" fontcolor="#00ff41"]
+}
