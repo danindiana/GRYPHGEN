@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRYPHGEN - Repo Explorer</title>
+    <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --sidebar-color: #161b22;
+            --neon-blue: #00d4ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #39ff14;
+            --text-color: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+        }
+
+        #sidebar {
+            width: 300px;
+            background-color: var(--sidebar-color);
+            border-right: 2px solid var(--neon-blue);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0, 212, 255, 0.2);
+            z-index: 10;
+        }
+
+        #sidebar h2 {
+            padding: 20px;
+            margin: 0;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #30363d;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .nav-group {
+            padding: 15px 20px 5px;
+            font-size: 0.8rem;
+            color: #8b949e;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background-color: #21262d;
+            color: var(--neon-magenta);
+        }
+
+        .nav-item.active {
+            background-color: #30363d;
+            border-left: 4px solid var(--neon-blue);
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        #viewer-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #svg-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(22, 27, 34, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--neon-blue);
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--neon-magenta);
+            color: var(--neon-magenta);
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: var(--neon-magenta);
+            color: white;
+            box-shadow: 0 0 10px var(--neon-magenta);
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--neon-blue);
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>GRYPHGEN Explorer</h2>
+    
+    <div class="nav-group">General</div>
+    <div class="nav-item active" data-svg="overview.svg">Project Overview</div>
+    <div class="nav-item" data-svg="workspace_integration.svg">Workspace Integration</div>
+    
+    <div class="nav-group">Core Modules</div>
+    <div class="nav-item" data-svg="agentic.svg">Agentic (Python)</div>
+    <div class="nav-item" data-svg="gstruct.svg">GStruct (Metadata)</div>
+    <div class="nav-item" data-svg="perl_pipes.svg">Perl Pipes</div>
+    <div class="nav-item" data-svg="mcp_server.svg">MCP Server Design</div>
+    
+    <div class="nav-group">Retrieval & Logic</div>
+    <div class="nav-item" data-svg="rag_system.svg">RAG Architecture</div>
+    <div class="nav-item" data-svg="cag_logic.svg">CAG Engine Detail</div>
+    <div class="nav-item" data-svg="simgrag_logic.svg">SimGRAG Engine Detail</div>
+    
+    <div class="nav-group">Local LLM & Rust</div>
+    <div class="nav-item" data-svg="ollama_duel_core.svg">Ollama Duel (Core)</div>
+    <div class="nav-item" data-svg="ollama_duel_logic.svg">Ollama Duel (Logic)</div>
+    
+    <div class="nav-group">System</div>
+    <div class="nav-item" data-svg="auth_flow.svg">Auth (API Key)</div>
+    <div class="nav-item" data-svg="installation.svg">Installation Flow</div>
+    <div class="nav-item" data-svg="llm_sandbox.svg">LLM Sandbox CLI</div>
+    <div class="nav-item" data-svg="calisota_ai.svg">Calisota Timeline</div>
+</div>
+
+<div id="viewer-container">
+    <div id="loading">ENCRYPTING DATA...</div>
+    <embed id="svg-viewer" type="image/svg+xml" src="overview.svg" />
+    
+    <div id="controls">
+        <button onclick="panZoom.zoomIn()">+</button>
+        <button onclick="panZoom.zoomOut()">-</button>
+        <button onclick="panZoom.reset()">RESET</button>
+    </div>
+</div>
+
+<script>
+    let panZoom;
+    const viewer = document.getElementById('svg-viewer');
+    const loading = document.getElementById('loading');
+
+    function initPanZoom() {
+        if (panZoom) panZoom.destroy();
+        panZoom = svgPanZoom('#svg-viewer', {
+            zoomEnabled: true,
+            controlIconsEnabled: false,
+            fit: true,
+            center: true,
+            minZoom: 0.1,
+            maxZoom: 10
+        });
+    }
+
+    viewer.addEventListener('load', function() {
+        loading.style.display = 'none';
+        initPanZoom();
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const svgFile = this.getAttribute('data-svg');
+            
+            // UI Update
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Load new SVG
+            loading.style.display = 'block';
+            viewer.setAttribute('src', svgFile);
+        });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (panZoom) {
+            panZoom.resize();
+            panZoom.fit();
+            panZoom.center();
+        }
+    });
+</script>
+
+</body>
+</html>
