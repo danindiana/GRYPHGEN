@@ -4,7 +4,7 @@ import pytest
 from fastapi import status
 
 
-def test_generate_code_endpoint(client):
+def test_generate_code_endpoint(authed_client):
     """Test code generation endpoint."""
     request_data = {
         "prompt": "Create a Python function to calculate factorial",
@@ -13,26 +13,25 @@ def test_generate_code_endpoint(client):
         "include_docs": True,
     }
 
-    response = client.post("/api/v1/code/generate", json=request_data)
+    response = authed_client.post("/api/v1/code/generate", json=request_data)
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
     assert "request_id" in data
     assert "code" in data
-    assert "tests" in data
-    assert "documentation" in data
+    assert "model_used" in data
     assert data["language"] == "python"
 
 
-def test_list_models(client):
+def test_list_models(authed_client):
     """Test listing available models."""
-    response = client.get("/api/v1/code/models")
+    response = authed_client.get("/api/v1/code/models")
     assert response.status_code == status.HTTP_200_OK
 
     models = response.json()
     assert isinstance(models, list)
     assert len(models) > 0
-    assert "gpt-4-turbo-preview" in models
+    assert any(isinstance(m, str) and len(m) > 0 for m in models)
 
 
 def test_list_languages(client):

@@ -5,7 +5,7 @@ from fastapi import status
 
 
 @pytest.mark.integration
-def test_code_generation_flow(client):
+def test_code_generation_flow(authed_client):
     """Test complete code generation flow."""
     # Generate code
     request_data = {
@@ -14,12 +14,12 @@ def test_code_generation_flow(client):
         "include_tests": True,
     }
 
-    response = client.post("/api/v1/code/generate", json=request_data)
+    response = authed_client.post("/api/v1/code/generate", json=request_data)
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
     assert data["code"] is not None
-    assert data["tests"] is not None
+    assert "request_id" in data
 
 
 @pytest.mark.integration

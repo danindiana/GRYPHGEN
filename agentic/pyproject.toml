@@ -55,6 +55,8 @@ dev = [
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.6.1",
+    "pytest-httpx>=0.35",
+    "pytest-asyncio>=0.24.0",
     "black>=24.10.0",
     "isort>=5.13.2",
     "flake8>=7.1.1",
@@ -200,6 +202,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q --strict-markers --cov=src --cov-report=term-missing --cov-report=html"
+asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
