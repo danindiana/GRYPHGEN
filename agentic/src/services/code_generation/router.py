@@ -3,9 +3,10 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Security
 from pydantic import BaseModel, Field
 
+from ...auth.api_keys import require_api_key
 from ...llm.generator import get_generator
 
 router = APIRouter()
@@ -34,7 +35,10 @@ class CodeGenerationResponse(BaseModel):
 
 
 @router.post("/generate", response_model=CodeGenerationResponse)
-async def generate_code(request: CodeGenerationRequest) -> CodeGenerationResponse:
+async def generate_code(
+    request: CodeGenerationRequest,
+    _: str = Security(require_api_key),
+) -> CodeGenerationResponse:
     """Generate code from a natural language prompt using the configured LLM backend."""
     generator = get_generator()
 

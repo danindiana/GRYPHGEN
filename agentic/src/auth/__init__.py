@@ -1,15 +1,10 @@
 """Authentication and authorization for GRYPHGEN Agentic."""
 
-from .jwt_handler import create_access_token, verify_token, get_current_user
-from .password import hash_password, verify_password
-from .dependencies import require_auth, require_role
+# Lazy imports only — jwt_handler and dependencies pull in database/models
+# which has SQLAlchemy issues. Import directly when needed:
+#   from .api_keys import require_api_key   (no DB dep)
+#   from .jwt_handler import verify_token   (needs DB)
 
-__all__ = [
-    "create_access_token",
-    "verify_token",
-    "get_current_user",
-    "hash_password",
-    "verify_password",
-    "require_auth",
-    "require_role",
-]
+from .api_keys import require_api_key
+
+__all__ = ["require_api_key"]

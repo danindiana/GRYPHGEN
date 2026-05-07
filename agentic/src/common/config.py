@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     use_gpu: bool = Field(default=True)
     mixed_precision: bool = Field(default=True)
 
+    # API key auth — comma-separated SHA-256 hashes
+    gryphgen_api_keys: str = Field(default="")
+
     # Security
     jwt_secret_key: str = Field(default="changeme-in-production")
     jwt_algorithm: str = Field(default="HS256")
