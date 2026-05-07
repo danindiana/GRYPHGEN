@@ -30,6 +30,7 @@ struct AgentPayload<'a> {
 pub struct AgentStep {
     pub step: Option<u32>,
     pub tool: Option<String>,
+    pub result: Option<String>,
     pub elapsed_s: Option<f64>,
 }
 

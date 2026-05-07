@@ -384,11 +384,28 @@ impl App {
             DemoItem::Agent => {
                 std::thread::spawn(move || {
                     let result = api::agent_run(&url, &key, &prompt).map(|r| {
-                        let mut out = r.output.clone();
+                        let mut out = String::new();
                         if let Some(trace) = &r.trace {
-                            let header = format!("\n\n─── {} steps ───\n", trace.len());
-                            out = header + &out;
+                            if !trace.is_empty() {
+                                for step in trace {
+                                    let tool = step.tool.as_deref().unwrap_or("?");
+                                    let elapsed = step.elapsed_s.map(|e| format!("  ({:.2}s)", e)).unwrap_or_default();
+                                    out.push_str(&format!("─── step {} · {}{} ───\n", step.step.unwrap_or(0), tool, elapsed));
+                                    if let Some(res) = &step.result {
+                                        let truncated = if res.len() > 300 {
+                                            format!("{}…", &res[..300])
+                                        } else {
+                                            res.clone()
+                                        };
+                                        out.push_str(&truncated);
+                                        out.push('\n');
+                                    }
+                                    out.push('\n');
+                                }
+                                out.push_str("─── answer ───\n");
+                            }
                         }
+                        out.push_str(&r.output);
                         let meta = ResultMeta {
                             tier: Some("agent".to_string()),
                             gen_time: r.total_time_s,
