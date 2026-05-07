@@ -1,0 +1,15 @@
+digraph Ollama_Duel_Core {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    main [label="main.rs", shape=hexagon, color="#39ff14", penwidth=2];
+
+    app [label="app.rs\n(State)"];
+    config [label="config.rs\n(Settings)"];
+    ollama_api [label="ollama.rs\n(Client)"];
+
+    main -> app;
+    main -> config;
+    app -> ollama_api [label="Query LLM"];
+}

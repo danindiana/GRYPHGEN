@@ -1,0 +1,16 @@
+digraph CAG_Engine_Detail {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    engine [label="cag_engine.py", shape=hexagon, color="#39ff14", penwidth=2];
+
+    db [label="db_interface.py"];
+    cache [label="cache_manager.py"];
+    kv [label="kv_cache.py"];
+
+    engine -> db [label="Query Data"];
+    engine -> cache [label="Request Cache"];
+    cache -> kv [label="Read/Write"];
+    db -> engine [label="Return Records"];
+}

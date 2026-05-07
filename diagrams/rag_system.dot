@@ -1,0 +1,30 @@
+digraph RAG_Architecture {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    rag [label="RAG System", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_cag {
+        label="CAG (Cache-Augmented Generation)";
+        fontcolor="#39ff14";
+        cag_engine [label="CAG Engine"];
+        cache_man [label="Cache Manager"];
+        kv_cache [label="KV Cache"];
+    }
+
+    subgraph cluster_simgrag {
+        label="SimGRAG (Subgraph Retrieval)";
+        fontcolor="#39ff14";
+        sim_engine [label="SimGRAG Engine"];
+        retriever [label="Subgraph Retriever"];
+        pattern [label="Pattern Generator"];
+    }
+
+    rag -> cag_engine;
+    rag -> sim_engine;
+    cag_engine -> cache_man;
+    cache_man -> kv_cache;
+    sim_engine -> retriever;
+    retriever -> pattern;
+}

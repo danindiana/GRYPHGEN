@@ -1,0 +1,16 @@
+digraph Ollama_Duel_Logic {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    logic [label="Duel Logic", shape=hexagon, color="#39ff14", penwidth=2];
+
+    actor_critic [label="actor_critic.rs\n(RL Agent)"];
+    ui [label="ui.rs\n(TUI)"];
+    mcp [label="mcp/\n(Model Context)"];
+
+    logic -> actor_critic [label="Decision"];
+    logic -> ui [label="Render"];
+    logic -> mcp [label="Context"];
+    actor_critic -> ui [label="Action Log"];
+}

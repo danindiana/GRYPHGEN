@@ -1,0 +1,16 @@
+digraph SimGRAG_Engine_Detail {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    sim_engine [label="simgrag_engine.py", shape=hexagon, color="#39ff14", penwidth=2];
+
+    retriever [label="subgraph_retriever.py"];
+    gsd [label="gsd_calculator.py"];
+    pattern [label="pattern_generator.py"];
+
+    sim_engine -> retriever;
+    retriever -> gsd [label="Calc Distance"];
+    gsd -> retriever;
+    retriever -> pattern [label="Gen Patterns"];
+}
