@@ -37,22 +37,13 @@ dependencies = [
     "uvicorn[standard]>=0.32.1",
     "pydantic>=2.10.3",
     "pydantic-settings>=2.6.1",
-    "torch>=2.5.1",
-    "transformers>=4.46.3",
-    "openai>=1.57.2",
-    "anthropic>=0.42.0",
-    "kafka-python>=2.0.2",
-    "asyncpg>=0.30.0",
-    "sqlalchemy>=2.0.36",
-    "prometheus-client>=0.21.0",
-    "prometheus-fastapi-instrumentator>=7.0.0",
-    "loguru>=0.7.3",
-    "click>=8.1.8",
     "httpx>=0.28.1",
     "aiofiles>=24.1.0",
-    "tiktoken>=0.8.0",
-    "einops>=0.8.0",
-    "safetensors>=0.4.5",
+    "loguru>=0.7.3",
+    "click>=8.1.8",
+    "pyyaml>=6.0.1",
+    "prometheus-client>=0.21.0",
+    "prometheus-fastapi-instrumentator>=7.0.0",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +71,25 @@ docs = [
     "mkdocstrings[python]>=0.27.0",
     "mkdocs-autorefs>=1.2.0",
     "pymdown-extensions>=10.12",
+]
+
+ollama = []  # uses httpx which is already a core dep
+
+anthropic = [
+    "anthropic>=0.42.0",
+]
+
+openai = [
+    "openai>=1.57.2",
+]
+
+kafka = [
+    "kafka-python>=2.0.2",
+]
+
+db = [
+    "asyncpg>=0.30.0",
+    "sqlalchemy>=2.0.36",
 ]
 
 gpu = [

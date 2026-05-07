@@ -1,134 +1,82 @@
 """Code Generation Service Router."""
 
+import uuid
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+from ...llm.generator import get_generator
 
 router = APIRouter()
 
 
 class CodeGenerationRequest(BaseModel):
-    """Code generation request model."""
-
     prompt: str = Field(..., description="Description of the code to generate")
     language: str = Field(default="python", description="Programming language")
     framework: Optional[str] = Field(None, description="Optional framework to use")
-    include_tests: bool = Field(default=True, description="Generate tests")
+    include_tests: bool = Field(default=False, description="Generate tests alongside code")
     include_docs: bool = Field(default=True, description="Generate documentation")
     style_guide: Optional[str] = Field(None, description="Code style guide")
     max_tokens: int = Field(default=4096, description="Maximum tokens to generate")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Generation temperature")
+    model: Optional[str] = Field(None, description="Override model (backend-specific name)")
 
 
 class CodeGenerationResponse(BaseModel):
-    """Code generation response model."""
-
-    request_id: str = Field(..., description="Unique request identifier")
-    code: str = Field(..., description="Generated code")
-    tests: Optional[str] = Field(None, description="Generated tests")
-    documentation: Optional[str] = Field(None, description="Generated documentation")
-    language: str = Field(..., description="Programming language")
-    framework: Optional[str] = Field(None, description="Framework used")
-    model_used: str = Field(..., description="AI model used for generation")
-    tokens_used: int = Field(..., description="Total tokens used")
-    generation_time: float = Field(..., description="Generation time in seconds")
+    request_id: str
+    code: str
+    language: str
+    framework: Optional[str] = None
+    model_used: str
+    tokens_used: int
+    generation_time: float
 
 
-@router.post("/generate", response_model=CodeGenerationResponse, status_code=200)
-async def generate_code(
-    request: CodeGenerationRequest,
-    background_tasks: BackgroundTasks,
-) -> CodeGenerationResponse:
-    """
-    Generate code based on a natural language prompt.
+@router.post("/generate", response_model=CodeGenerationResponse)
+async def generate_code(request: CodeGenerationRequest) -> CodeGenerationResponse:
+    """Generate code from a natural language prompt using the configured LLM backend."""
+    generator = get_generator()
 
-    This endpoint uses state-of-the-art AI models to generate code,
-    tests, and documentation based on the provided prompt.
+    try:
+        result = await generator.generate(
+            prompt=request.prompt,
+            language=request.language,
+            framework=request.framework,
+            model=request.model,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+            include_tests=request.include_tests,
+            include_docs=request.include_docs,
+            style_guide=request.style_guide,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"LLM backend error: {exc}") from exc
 
-    Args:
-        request: Code generation request parameters
-        background_tasks: FastAPI background tasks
-
-    Returns:
-        Generated code, tests, and documentation
-
-    Raises:
-        HTTPException: If generation fails
-    """
-    # TODO: Implement actual code generation logic
-    # This is a placeholder implementation
-
-    import uuid
-    import time
-
-    start_time = time.time()
-
-    # Placeholder response
-    response = CodeGenerationResponse(
+    return CodeGenerationResponse(
         request_id=str(uuid.uuid4()),
-        code=f"# Generated {request.language} code\n# Prompt: {request.prompt}\n\ndef example_function():\n    pass",
-        tests=f"# Generated tests\nimport pytest\n\ndef test_example_function():\n    pass" if request.include_tests else None,
-        documentation=f"# Documentation\n\n## {request.prompt}\n\nGenerated code documentation." if request.include_docs else None,
+        code=result.text,
         language=request.language,
         framework=request.framework,
-        model_used="gpt-4-turbo-preview",
-        tokens_used=150,
-        generation_time=time.time() - start_time,
+        model_used=result.model,
+        tokens_used=result.tokens_used,
+        generation_time=result.generation_time,
     )
 
-    # Background task for logging/metrics
-    background_tasks.add_task(log_generation_metrics, request, response)
 
-    return response
-
-
-@router.get("/models", response_model=list[str])
+@router.get("/models")
 async def list_available_models() -> list[str]:
-    """
-    List available code generation models.
-
-    Returns:
-        List of available model names
-    """
-    return [
-        "gpt-4-turbo-preview",
-        "gpt-4",
-        "claude-3-opus",
-        "claude-3-sonnet",
-        "codellama-34b",
-        "deepseek-coder-33b",
-    ]
+    """List models available from the current backend."""
+    generator = get_generator()
+    try:
+        return await generator.list_models()
+    except Exception:
+        return []
 
 
-@router.get("/languages", response_model=list[str])
+@router.get("/languages")
 async def list_supported_languages() -> list[str]:
-    """
-    List supported programming languages.
-
-    Returns:
-        List of supported programming languages
-    """
     return [
-        "python",
-        "javascript",
-        "typescript",
-        "java",
-        "go",
-        "rust",
-        "c++",
-        "c#",
-        "ruby",
-        "php",
-        "swift",
-        "kotlin",
+        "python", "javascript", "typescript", "go", "rust",
+        "java", "c", "c++", "c#", "bash", "ruby", "php",
     ]
-
-
-async def log_generation_metrics(
-    request: CodeGenerationRequest,
-    response: CodeGenerationResponse,
-) -> None:
-    """Log code generation metrics for monitoring."""
-    # TODO: Implement actual logging to Prometheus/metrics system
-    pass
