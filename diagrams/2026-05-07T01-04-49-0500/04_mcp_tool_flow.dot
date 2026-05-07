@@ -1,0 +1,149 @@
+digraph mcp_tool_flow {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#cc00ff"
+        label="MCP (Model Context Protocol) Tool Flow"
+        labelloc=t
+        fontsize=20
+        pad=0.6
+        splines=ortho
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    subgraph cluster_client {
+        label="MCP Client  (ollama-duel)"
+        fontcolor="#cc00ff"
+        color="#cc00ff"
+        bgcolor="#0d001a"
+        style=rounded
+        penwidth=2
+
+        mcp_client [
+            label="McpClient\nsrc/mcp/client.rs"
+            fillcolor="#0d001a"
+            color="#cc00ff"
+            fontcolor="#cc00ff"
+        ]
+        handshake [
+            label="Initialize Handshake\nprotocolVersion: 2024-11-05\nclientInfo: ollama-duel"
+            fillcolor="#0d001a"
+            color="#9900ff"
+            fontcolor="#9900ff"
+            shape=note
+        ]
+        tool_registry [
+            label="Tool Registry\ntools/list → McpTool[]\nOllamaTool conversion"
+            fillcolor="#0d001a"
+            color="#7700ff"
+            fontcolor="#7700ff"
+            shape=box
+        ]
+        call_tool [
+            label="tools/call\njson-rpc request\n{name, arguments}"
+            fillcolor="#0d001a"
+            color="#aa00ff"
+            fontcolor="#aa00ff"
+            shape=hexagon
+        ]
+    }
+
+    subgraph cluster_transport {
+        label="Transport  (stdio  JSON-RPC 2.0)"
+        fontcolor="#00ffff"
+        color="#00ffff"
+        bgcolor="#001a1a"
+        style=rounded
+        penwidth=2
+
+        stdin_pipe [
+            label="ChildStdin\n→ write JSON line\n→ flush"
+            fillcolor="#001a1a"
+            color="#00ffff"
+            fontcolor="#00ffff"
+        ]
+        stdout_pipe [
+            label="BufReader<ChildStdout>\n← read_line()\n← match id"
+            fillcolor="#001a1a"
+            color="#00ccff"
+            fontcolor="#00ccff"
+        ]
+    }
+
+    subgraph cluster_filesystem {
+        label="filesystem  (@modelcontextprotocol/server-filesystem)"
+        fontcolor="#00ff41"
+        color="#00ff41"
+        bgcolor="#001a0d"
+        style=rounded
+        penwidth=2
+
+        fs_server [
+            label="npx -y\n@modelcontextprotocol/\nserver-filesystem\n/path/to/workspace"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+        ]
+        fs_tools [
+            label="14 tools:\nread_file · write_file\nedit_file · list_directory\ncreate_directory · move_file\nsearch_files · get_file_info…"
+            fillcolor="#001a0d"
+            color="#00cc33"
+            fontcolor="#00cc33"
+            shape=note
+        ]
+    }
+
+    subgraph cluster_other_servers {
+        label="Optional MCP Servers  (disabled by default)"
+        fontcolor="#888888"
+        color="#444444"
+        bgcolor="#111111"
+        style="rounded,dashed"
+        penwidth=1
+
+        brave [
+            label="brave-search\nBRAVE_API_KEY required"
+            fillcolor="#111111"
+            color="#555555"
+            fontcolor="#555555"
+            style="filled,rounded,dashed"
+        ]
+        memory [
+            label="memory\nentity knowledge graph"
+            fillcolor="#111111"
+            color="#555555"
+            fontcolor="#555555"
+            style="filled,rounded,dashed"
+        ]
+        fetch_srv [
+            label="fetch\nmcp-server-fetch (uvx)"
+            fillcolor="#111111"
+            color="#555555"
+            fontcolor="#555555"
+            style="filled,rounded,dashed"
+        ]
+    }
+
+    mcp_client -> handshake [label="on connect" color="#9900ff" fontcolor="#9900ff" style=dashed]
+    handshake -> tool_registry [label="initialized\nnotification" color="#7700ff" fontcolor="#7700ff"]
+    tool_registry -> call_tool [label="actor requests\ntool call" color="#aa00ff" fontcolor="#aa00ff"]
+    call_tool -> stdin_pipe [label="JSON-RPC\nrequest" color="#00ffff" fontcolor="#00ffff"]
+    stdin_pipe -> fs_server [label="stdin" color="#00ff41" fontcolor="#00ff41"]
+    fs_server -> stdout_pipe [label="stdout" color="#00ff41" fontcolor="#00ff41"]
+    stdout_pipe -> call_tool [label="JSON-RPC\nresponse" color="#00ccff" fontcolor="#00ccff"]
+    fs_server -> fs_tools [label="exposes" color="#00cc33" fontcolor="#00cc33" style=dashed]
+    brave -> stdin_pipe [label="(if enabled)" color="#555555" fontcolor="#555555" style=dashed]
+    memory -> stdin_pipe [label="(if enabled)" color="#555555" fontcolor="#555555" style=dashed]
+    fetch_srv -> stdin_pipe [label="(if enabled)" color="#555555" fontcolor="#555555" style=dashed]
+}

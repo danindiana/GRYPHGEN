@@ -1,0 +1,113 @@
+digraph actor_critic_loop {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#ff6600"
+        label="ollama-duel  Actor→Critic Evaluation Loop"
+        labelloc=t
+        fontsize=20
+        pad=0.6
+        splines=curved
+        rankdir=LR
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    user_prompt [
+        label="User Prompt\n(TUI input)"
+        fillcolor="#001a1a"
+        color="#00ffff"
+        fontcolor="#00ffff"
+        shape=parallelogram
+    ]
+
+    round_counter [
+        label="Round Counter\n0 .. max_revision_rounds\n(default 2)"
+        fillcolor="#0d001a"
+        color="#8800ff"
+        fontcolor="#8800ff"
+        shape=box
+    ]
+
+    actor [
+        label="ACTOR\nqwen2.5:3b\ntemp=0.7\nmax_tool_rounds=6"
+        fillcolor="#1a0800"
+        color="#ff6600"
+        fontcolor="#ff6600"
+    ]
+
+    mcp_tools [
+        label="MCP Tools\nfilesystem · fetch\nbrave-search · memory\n(stdio JSON-RPC)"
+        fillcolor="#0d001a"
+        color="#cc00ff"
+        fontcolor="#cc00ff"
+        shape=parallelogram
+    ]
+
+    actor_stream [
+        label="Actor Streaming\nBgEvent::ActorChunk\n→ TUI conversation panel"
+        fillcolor="#1a0500"
+        color="#ff4400"
+        fontcolor="#ff4400"
+        shape=note
+    ]
+
+    critic [
+        label="CRITIC\nqwen2.5:3b\ntemp=0.15\n(no tools)"
+        fillcolor="#1a0000"
+        color="#ff0044"
+        fontcolor="#ff0044"
+    ]
+
+    critic_json [
+        label="Critic JSON Response\n{\n  \"score\": 1-10,\n  \"feedback\": \"...\",\n  \"should_revise\": bool\n}"
+        fillcolor="#1a0000"
+        color="#ff3366"
+        fontcolor="#ff3366"
+        shape=note
+    ]
+
+    score_check [
+        label="score ≥ threshold\n(default 7)\nOR no rounds left?"
+        fillcolor="#1a1000"
+        color="#ffff00"
+        fontcolor="#ffff00"
+        shape=diamond
+    ]
+
+    display_result [
+        label="Display Final Response\nscore ≥ 7  →  GREEN\nscore 5-6  →  YELLOW\nscore < 5  →  RED"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+        shape=parallelogram
+    ]
+
+    revise [
+        label="Revision Round\nActor re-generates\nwith critic feedback"
+        fillcolor="#1a0800"
+        color="#ff8800"
+        fontcolor="#ff8800"
+    ]
+
+    user_prompt -> round_counter [color="#00ffff" fontcolor="#00ffff"]
+    round_counter -> actor [label="start round" color="#ff6600" fontcolor="#ff6600"]
+    actor -> mcp_tools [label="tool calls\n(up to 6 rounds)" color="#cc00ff" fontcolor="#cc00ff"]
+    mcp_tools -> actor [label="tool results" color="#cc00ff" fontcolor="#cc00ff"]
+    actor -> actor_stream [label="stream tokens" color="#ff4400" fontcolor="#ff4400" style=dashed]
+    actor -> critic [label="final response" color="#ff0044" fontcolor="#ff0044"]
+    critic -> critic_json [label="evaluate" color="#ff3366" fontcolor="#ff3366" style=dashed]
+    critic_json -> score_check [color="#ffff00" fontcolor="#ffff00"]
+    score_check -> display_result [label="accept" color="#00ff41" fontcolor="#00ff41"]
+    score_check -> revise [label="revise" color="#ff8800" fontcolor="#ff8800"]
+    revise -> actor [label="feedback\n+ increment round" color="#ff6600" fontcolor="#ff6600"]
+}

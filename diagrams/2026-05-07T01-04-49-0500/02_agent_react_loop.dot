@@ -1,0 +1,147 @@
+digraph agent_react_loop {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ffff"
+        label="Agent ReAct Loop  (devstral:24b)"
+        labelloc=t
+        fontsize=20
+        pad=0.6
+        splines=curved
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    task [
+        label="User Task\n\"write hello.py,\nrun it, show output\""
+        fillcolor="#001a1a"
+        color="#00ffff"
+        fontcolor="#00ffff"
+        shape=parallelogram
+    ]
+
+    system_prompt [
+        label="System Prompt\nMANDATORY TOOL USE\nnever describe, always act"
+        fillcolor="#0d001a"
+        color="#8800ff"
+        fontcolor="#8800ff"
+        shape=note
+    ]
+
+    ollama_chat [
+        label="POST /api/chat\ndevstral:24b\ntools: list_dir · write_file\nrun_shell · read_file · web_search"
+        fillcolor="#1a1a00"
+        color="#ffff00"
+        fontcolor="#ffff00"
+        shape=box
+    ]
+
+    has_tool_calls [
+        label="tool_calls\nin response?"
+        fillcolor="#1a0a00"
+        color="#ff6600"
+        fontcolor="#ff6600"
+        shape=diamond
+    ]
+
+    dispatch [
+        label="Tool Dispatch"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+        shape=hexagon
+    ]
+
+    list_dir [
+        label="list_dir\nworkspace scan"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+    ]
+    write_file [
+        label="write_file\ncreate / overwrite"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+    ]
+    run_shell [
+        label="run_shell\nDocker sandbox\n256MB · 0.5 CPU\nno network"
+        fillcolor="#001a0d"
+        color="#00cc33"
+        fontcolor="#00cc33"
+    ]
+    read_file [
+        label="read_file\nworkspace only"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+    ]
+    web_search [
+        label="web_search\nDuckDuckGo\n(unknown APIs only)"
+        fillcolor="#001a0d"
+        color="#00aa22"
+        fontcolor="#00aa22"
+        style="filled,rounded,dashed"
+    ]
+
+    append_result [
+        label="Append tool result\nto message history\nrole: tool"
+        fillcolor="#0d0d1a"
+        color="#6600ff"
+        fontcolor="#6600ff"
+        shape=box
+    ]
+
+    max_steps [
+        label="step ≥ max_steps\n(default 20)?"
+        fillcolor="#1a0000"
+        color="#ff0044"
+        fontcolor="#ff0044"
+        shape=diamond
+    ]
+
+    final_answer [
+        label="Final Answer\nAgentResult\noutput · trace · steps_taken"
+        fillcolor="#001a1a"
+        color="#00ffff"
+        fontcolor="#00ffff"
+        shape=parallelogram
+    ]
+
+    truncated [
+        label="Truncated Result\n\"Reached max_steps\"\ntruncated: true"
+        fillcolor="#1a0000"
+        color="#ff0044"
+        fontcolor="#ff0044"
+        shape=parallelogram
+    ]
+
+    task -> ollama_chat [label="user message\n+ workspace path" color="#00ffff" fontcolor="#00ffff"]
+    system_prompt -> ollama_chat [label="injected" color="#8800ff" fontcolor="#8800ff" style=dashed]
+    ollama_chat -> has_tool_calls [color="#ffff00" fontcolor="#ffff00"]
+    has_tool_calls -> final_answer [label="no  →  final\nanswer" color="#00ffff" fontcolor="#00ffff"]
+    has_tool_calls -> dispatch [label="yes  →  execute" color="#00ff41" fontcolor="#00ff41"]
+    dispatch -> list_dir [color="#00ff41" fontcolor="#00ff41"]
+    dispatch -> write_file [color="#00ff41" fontcolor="#00ff41"]
+    dispatch -> run_shell [color="#00cc33" fontcolor="#00cc33"]
+    dispatch -> read_file [color="#00ff41" fontcolor="#00ff41"]
+    dispatch -> web_search [color="#00aa22" fontcolor="#00aa22" style=dashed]
+    list_dir -> append_result [color="#6600ff" fontcolor="#6600ff"]
+    write_file -> append_result [color="#6600ff" fontcolor="#6600ff"]
+    run_shell -> append_result [color="#6600ff" fontcolor="#6600ff"]
+    read_file -> append_result [color="#6600ff" fontcolor="#6600ff"]
+    web_search -> append_result [color="#6600ff" fontcolor="#6600ff" style=dashed]
+    append_result -> max_steps [color="#ff6600" fontcolor="#ff6600"]
+    max_steps -> ollama_chat [label="no  →  next step" color="#ffff00" fontcolor="#ffff00"]
+    max_steps -> truncated [label="yes  →  abort" color="#ff0044" fontcolor="#ff0044"]
+}

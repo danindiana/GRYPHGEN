@@ -1,0 +1,178 @@
+digraph api_auth_llm_routing {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ffff"
+        label="API Auth  +  LLM Routing  (gryphgen-agentic)"
+        labelloc=t
+        fontsize=20
+        pad=0.6
+        splines=curved
+        rankdir=LR
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=2
+    ]
+
+    request [
+        label="Incoming Request\nPOST /api/v1/code/generate\nor /api/v1/agent/run"
+        fillcolor="#001a1a"
+        color="#00ffff"
+        fontcolor="#00ffff"
+        shape=parallelogram
+    ]
+
+    extract_key [
+        label="Extract\nX-API-Key header"
+        fillcolor="#0d001a"
+        color="#8800ff"
+        fontcolor="#8800ff"
+    ]
+
+    sha256 [
+        label="SHA-256\nhash(key)"
+        fillcolor="#0d001a"
+        color="#aa00ff"
+        fontcolor="#aa00ff"
+        shape=hexagon
+    ]
+
+    hash_check [
+        label="hash in\nGRYPHGEN_API_KEYS?"
+        fillcolor="#1a0000"
+        color="#ff0044"
+        fontcolor="#ff0044"
+        shape=diamond
+    ]
+
+    deny [
+        label="403 Forbidden\n{detail: Invalid API key}"
+        fillcolor="#1a0000"
+        color="#ff0044"
+        fontcolor="#ff0044"
+        shape=parallelogram
+    ]
+
+    rate_check [
+        label="Rate Limit Check\ngenerate: 10 req/60s\nagent:    5 req/300s\n(sliding window)"
+        fillcolor="#1a0a00"
+        color="#ff6600"
+        fontcolor="#ff6600"
+        shape=hexagon
+    ]
+
+    rate_deny [
+        label="429 Too Many Requests\nRetry-After: Ns"
+        fillcolor="#1a0500"
+        color="#ff3300"
+        fontcolor="#ff3300"
+        shape=parallelogram
+    ]
+
+    llm_router [
+        label="LLM Router\nGRYPHGEN_LLM_BACKEND\nreasoning_effort field"
+        fillcolor="#1a1a00"
+        color="#ffff00"
+        fontcolor="#ffff00"
+        shape=diamond
+    ]
+
+    subgraph cluster_tiers {
+        label="Generation Tiers"
+        fontcolor="#ffff00"
+        color="#ffff00"
+        bgcolor="#1a1a00"
+        style=rounded
+        penwidth=1
+
+        fast [
+            label="FAST\nreasoning_effort=none\nCODER direct"
+            fillcolor="#1a0d00"
+            color="#ff9900"
+            fontcolor="#ff9900"
+        ]
+        standard [
+            label="STANDARD\nTHINKER brief\n→ CODER"
+            fillcolor="#1a1200"
+            color="#ffcc00"
+            fontcolor="#ffcc00"
+        ]
+        strong [
+            label="STRONG\nTHINKER plan\n→ CODER\n→ THINKER review\n→ CODER revise"
+            fillcolor="#1a1500"
+            color="#ffff00"
+            fontcolor="#ffff00"
+        ]
+        agent [
+            label="AGENT\ndevstral:24b\nReAct loop\nmax_steps=20"
+            fillcolor="#1a1a00"
+            color="#ffe000"
+            fontcolor="#ffe000"
+        ]
+    }
+
+    subgraph cluster_models {
+        label="Ollama  :11434"
+        fontcolor="#00ffff"
+        color="#444444"
+        bgcolor="#111111"
+        style=rounded
+        penwidth=1
+
+        ollama_thinker [
+            label="deepseek-r1:14b\nTHINKER_MODEL\n:11434"
+            fillcolor="#111a00"
+            color="#aaff00"
+            fontcolor="#aaff00"
+        ]
+        ollama_coder [
+            label="qwen2.5-coder:7b\nCODER_MODEL\n:11436"
+            fillcolor="#001100"
+            color="#00ff88"
+            fontcolor="#00ff88"
+        ]
+        ollama_agent [
+            label="devstral:24b\nOLLAMA_MODEL\n:11434"
+            fillcolor="#111100"
+            color="#ffff44"
+            fontcolor="#ffff44"
+        ]
+    }
+
+    response [
+        label="200 OK\nCodeGenerationResponse\nor AgentRunResponse"
+        fillcolor="#001a0d"
+        color="#00ff41"
+        fontcolor="#00ff41"
+        shape=parallelogram
+    ]
+
+    request -> extract_key [color="#00ffff" fontcolor="#00ffff"]
+    extract_key -> sha256 [color="#aa00ff" fontcolor="#aa00ff"]
+    sha256 -> hash_check [color="#ff0044" fontcolor="#ff0044"]
+    hash_check -> deny [label="no" color="#ff0044" fontcolor="#ff0044"]
+    hash_check -> rate_check [label="yes" color="#00ff41" fontcolor="#00ff41"]
+    rate_check -> rate_deny [label="exceeded" color="#ff3300" fontcolor="#ff3300"]
+    rate_check -> llm_router [label="ok" color="#ffff00" fontcolor="#ffff00"]
+    llm_router -> fast [label="effort=none" color="#ff9900" fontcolor="#ff9900"]
+    llm_router -> standard [label="effort=medium" color="#ffcc00" fontcolor="#ffcc00"]
+    llm_router -> strong [label="effort=high" color="#ffff00" fontcolor="#ffff00"]
+    llm_router -> agent [label="/agent/run" color="#ffe000" fontcolor="#ffe000"]
+    fast -> ollama_coder [color="#00ff88" fontcolor="#00ff88"]
+    standard -> ollama_thinker [color="#aaff00" fontcolor="#aaff00"]
+    standard -> ollama_coder [color="#00ff88" fontcolor="#00ff88"]
+    strong -> ollama_thinker [color="#aaff00" fontcolor="#aaff00"]
+    strong -> ollama_coder [color="#00ff88" fontcolor="#00ff88"]
+    agent -> ollama_agent [color="#ffff44" fontcolor="#ffff44"]
+    ollama_coder -> response [color="#00ff41" fontcolor="#00ff41"]
+    ollama_thinker -> response [color="#00ff41" fontcolor="#00ff41" style=dashed]
+    ollama_agent -> response [color="#00ff41" fontcolor="#00ff41"]
+}

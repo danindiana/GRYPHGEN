@@ -1,0 +1,145 @@
+digraph system_architecture {
+    graph [
+        bgcolor="#0d0d0d"
+        fontname="Courier New"
+        fontcolor="#00ffff"
+        label="GRYPHGEN System Architecture"
+        labelloc=t
+        fontsize=20
+        pad=0.5
+        splines=ortho
+        rankdir=TB
+    ]
+    node [
+        fontname="Courier New"
+        fontsize=11
+        style="filled,rounded"
+        penwidth=2
+    ]
+    edge [
+        fontname="Courier New"
+        fontsize=10
+        penwidth=1.5
+    ]
+
+    subgraph cluster_client {
+        label="Client Layer"
+        fontcolor="#ff00ff"
+        color="#ff00ff"
+        bgcolor="#1a001a"
+        style=rounded
+        penwidth=2
+
+        wizard [
+            label="gg-wizard\n(Ratatui TUI)\nRust / Crossterm"
+            fillcolor="#1a001a"
+            color="#ff00ff"
+            fontcolor="#ff00ff"
+        ]
+        config [
+            label="~/.config/gryphgen/\nconfig.toml\napi_key · api_url"
+            fillcolor="#0d0d1a"
+            color="#8800ff"
+            fontcolor="#8800ff"
+            shape=note
+        ]
+    }
+
+    subgraph cluster_api {
+        label="API Layer  :8090"
+        fontcolor="#00ffff"
+        color="#00ffff"
+        bgcolor="#001a1a"
+        style=rounded
+        penwidth=2
+
+        fastapi [
+            label="gryphgen-agentic\n(FastAPI)\nuvicorn · systemd"
+            fillcolor="#001a1a"
+            color="#00ffff"
+            fontcolor="#00ffff"
+        ]
+        auth [
+            label="API Key Auth\nSHA-256 hash check\nrate limiter"
+            fillcolor="#001a0d"
+            color="#00ff41"
+            fontcolor="#00ff41"
+            shape=hexagon
+        ]
+        router [
+            label="LLM Router\nFAST / STANDARD\nSTRONG / AGENT"
+            fillcolor="#001a1a"
+            color="#00ccff"
+            fontcolor="#00ccff"
+            shape=diamond
+        ]
+    }
+
+    subgraph cluster_llm {
+        label="LLM Layer  (Ollama  :11434)"
+        fontcolor="#ffff00"
+        color="#ffff00"
+        bgcolor="#1a1a00"
+        style=rounded
+        penwidth=2
+
+        thinker [
+            label="THINKER\ndeepseek-r1:14b\nRTX 5080  GPU 0"
+            fillcolor="#1a1500"
+            color="#ffff00"
+            fontcolor="#ffff00"
+        ]
+        coder [
+            label="CODER\nqwen2.5-coder:7b\nRTX 3080  GPU 1"
+            fillcolor="#1a0d00"
+            color="#ff9900"
+            fontcolor="#ff9900"
+        ]
+        devstral [
+            label="AGENT\ndevstral:24b\nRTX 5080  GPU 0"
+            fillcolor="#1a1a00"
+            color="#ffe000"
+            fontcolor="#ffe000"
+        ]
+    }
+
+    subgraph cluster_ollama_duel {
+        label="ollama-duel  (standalone)"
+        fontcolor="#ff6600"
+        color="#ff6600"
+        bgcolor="#1a0a00"
+        style=rounded
+        penwidth=2
+
+        actor [
+            label="Actor\nqwen2.5:3b\ntemp=0.7"
+            fillcolor="#1a0a00"
+            color="#ff6600"
+            fontcolor="#ff6600"
+        ]
+        critic [
+            label="Critic\nqwen2.5:3b\ntemp=0.15"
+            fillcolor="#1a0500"
+            color="#ff3300"
+            fontcolor="#ff3300"
+        ]
+        mcp [
+            label="MCP Client\nstdio JSON-RPC\nfilesystem · search"
+            fillcolor="#0d0a1a"
+            color="#cc00ff"
+            fontcolor="#cc00ff"
+            shape=parallelogram
+        ]
+    }
+
+    wizard -> fastapi [label="POST /api/v1/*\nX-API-Key header" color="#ff00ff" fontcolor="#ff00ff"]
+    config -> wizard [label="loads" color="#8800ff" fontcolor="#8800ff" style=dashed]
+    fastapi -> auth [label="every request" color="#00ff41" fontcolor="#00ff41"]
+    auth -> router [label="authorized" color="#00ff41" fontcolor="#00ff41"]
+    router -> thinker [label="STANDARD\nSTRONG plan" color="#ffff00" fontcolor="#ffff00"]
+    router -> coder [label="FAST\ncode gen" color="#ff9900" fontcolor="#ff9900"]
+    router -> devstral [label="AGENT\nReAct loop" color="#ffe000" fontcolor="#ffe000"]
+    thinker -> coder [label="structured brief" color="#ff9900" fontcolor="#ff9900" style=dashed]
+    actor -> mcp [label="tool calls" color="#cc00ff" fontcolor="#cc00ff"]
+    actor -> critic [label="response" color="#ff3300" fontcolor="#ff3300"]
+}
