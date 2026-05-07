@@ -10,24 +10,33 @@ from ..common.config import get_settings
 
 settings = get_settings()
 
-# Create database engine
-engine = create_engine(
-    settings.database_url,
-    pool_size=settings.db_pool_size,
-    max_overflow=settings.db_max_overflow,
-    pool_pre_ping=True,  # Verify connections before using
-    echo=settings.debug,  # Log SQL queries in debug mode
-)
-
-# Create session factory
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
-
-# Base class for declarative models
 Base = declarative_base()
+
+_engine = None
+_SessionLocal = None
+
+
+def _get_engine():
+    global _engine, _SessionLocal
+    if _engine is None:
+        _engine = create_engine(
+            settings.database_url,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
+            pool_pre_ping=True,
+            echo=settings.debug,
+        )
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+    return _engine
+
+
+def _get_session_local():
+    _get_engine()
+    return _SessionLocal
+
+
+engine = property(_get_engine)
+SessionLocal = property(_get_session_local)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -47,15 +56,17 @@ def get_db() -> Generator[Session, None, None]:
             return db.query(Item).all()
         ```
     """
-    db = SessionLocal()
+    db = _get_session_local()()
     try:
         yield db
     finally:
         db.close()
 
 
-async def get_async_db() -> Generator:
+async def get_async_db():
     """Get async database session (placeholder for future async implementation)."""
-    # For now, use sync version
-    # TODO: Implement with asyncpg
-    yield from get_db()
+    db = _get_session_local()()
+    try:
+        yield db
+    finally:
+        db.close()

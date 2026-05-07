@@ -175,7 +175,7 @@ async def get_improvement_suggestions() -> List[ImprovementSuggestion]:
 async def trigger_retraining(
     service: ServiceType,
     use_meta_learning: bool = True,
-    adaptation_steps: int = Field(default=5, ge=1, le=20),
+    adaptation_steps: int = 5,
 ) -> TrainingMetrics:
     """
     Trigger model retraining with meta-learning.

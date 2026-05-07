@@ -22,16 +22,19 @@ class OllamaBackend:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
+        system: str | None = None,
     ) -> GenerationResult:
         effective_model = model or self.model
         t0 = time.monotonic()
+
+        full_prompt = f"{system}\n\n{prompt}" if system else prompt
 
         async with httpx.AsyncClient(timeout=300.0) as client:
             resp = await client.post(
                 f"{self.base_url}/api/generate",
                 json={
                     "model": effective_model,
-                    "prompt": prompt,
+                    "prompt": full_prompt,
                     "stream": False,
                     "options": {
                         "temperature": temperature,

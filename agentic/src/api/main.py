@@ -89,52 +89,34 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-# Import and include routers
+# Core routers — always loaded
 from ..services.code_generation import router as code_generation_router
-from ..services.automated_testing import router as testing_router
-from ..services.project_management import router as project_mgmt_router
-from ..services.documentation import router as docs_router
-from ..services.collaboration import router as collab_router
-from ..services.self_improvement import router as improvement_router
-from ..websockets import websocket_router
 
-# Include service routers
-app.include_router(
-    code_generation_router,
-    prefix="/api/v1/code",
-    tags=["Code Generation"],
-)
-app.include_router(
-    testing_router,
-    prefix="/api/v1/test",
-    tags=["Automated Testing"],
-)
-app.include_router(
-    project_mgmt_router,
-    prefix="/api/v1/project",
-    tags=["Project Management"],
-)
-app.include_router(
-    docs_router,
-    prefix="/api/v1/docs",
-    tags=["Documentation"],
-)
-app.include_router(
-    collab_router,
-    prefix="/api/v1/collaboration",
-    tags=["Collaboration"],
-)
-app.include_router(
-    improvement_router,
-    prefix="/api/v1/improve",
-    tags=["Self-Improvement"],
-)
+app.include_router(code_generation_router, prefix="/api/v1/code", tags=["Code Generation"])
 
-# Include WebSocket router
-app.include_router(
-    websocket_router,
-    tags=["WebSocket"],
-)
+# Optional routers — skip gracefully if their deps aren't installed
+_optional_routers = [
+    ("..services.automated_testing", "router", "/api/v1/test", "Automated Testing"),
+    ("..services.project_management", "router", "/api/v1/project", "Project Management"),
+    ("..services.documentation", "router", "/api/v1/docs", "Documentation"),
+    ("..services.collaboration", "router", "/api/v1/collaboration", "Collaboration"),
+    ("..services.self_improvement", "router", "/api/v1/improve", "Self-Improvement"),
+]
+
+import importlib
+
+for _mod, _attr, _prefix, _tag in _optional_routers:
+    try:
+        _m = importlib.import_module(_mod, package=__package__)
+        app.include_router(getattr(_m, _attr), prefix=_prefix, tags=[_tag])
+    except Exception as _e:
+        logger.warning(f"Skipping router {_mod}: {_e}")
+
+try:
+    from ..websockets import websocket_router
+    app.include_router(websocket_router, tags=["WebSocket"])
+except Exception as _e:
+    logger.warning(f"Skipping WebSocket router: {_e}")
 
 
 if __name__ == "__main__":
