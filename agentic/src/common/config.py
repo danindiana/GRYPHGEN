@@ -53,9 +53,15 @@ class Settings(BaseSettings):
     # LLM Backend — ollama | anthropic | openai
     gryphgen_llm_backend: str = Field(default="ollama")
 
-    # Ollama
+    # Ollama — legacy single-backend (kept for compat)
     ollama_base_url: str = Field(default="http://127.0.0.1:11434")
     ollama_model: str = Field(default="devstral:24b")
+
+    # Tandem pipeline — THINKER (GPU 0) + CODER (GPU 1)
+    ollama_thinker_url: str = Field(default="http://127.0.0.1:11434")
+    ollama_coder_url: str = Field(default="http://127.0.0.1:11436")
+    thinker_model: str = Field(default="deepseek-r1:14b")
+    coder_model: str = Field(default="qwen2.5-coder:7b")
 
     # Anthropic / OpenAI
     openai_api_key: Optional[str] = None

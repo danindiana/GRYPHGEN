@@ -29,6 +29,9 @@ class CodeGenerationRequest(BaseModel):
     reasoning_effort: Optional[str] = Field(
         None, description="Override routing: 'none' for fast, 'high' for deep reasoning"
     )
+    web_context: bool = Field(
+        default=False, description="Prepend DDG search results to STRONG tier analysis"
+    )
 
 
 class CodeGenerationResponse(BaseModel):
@@ -66,6 +69,7 @@ async def generate_code(
             style_guide=request.style_guide,
             context_files=request.context_files,
             reasoning_effort=request.reasoning_effort,
+            web_context=request.web_context,
         )
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"LLM backend error: {exc}") from exc

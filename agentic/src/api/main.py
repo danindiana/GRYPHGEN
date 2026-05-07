@@ -4,7 +4,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -110,8 +110,21 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # Core routers — always loaded
 from ..services.code_generation import router as code_generation_router
 from ..services.agent import router as agent_service_module
+from ..auth.api_keys import require_api_key
 
 app.include_router(code_generation_router, prefix="/api/v1/code", tags=["Code Generation"])
+
+
+@app.get("/api/v1/tools/search", tags=["Tools"])
+async def web_search(
+    q: str,
+    max_results: int = 5,
+    api_key: str = Security(require_api_key),
+) -> dict:
+    """Search DuckDuckGo and return results. No extra API key required."""
+    from ..tools.web_search import search
+    results = await search(q, max_results=max_results)
+    return {"query": q, "results": results, "source": "ddg"}
 
 try:
     from ..services.agent.router import router as agent_router

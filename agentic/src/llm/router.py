@@ -1,28 +1,23 @@
-"""Task complexity classifier and model config selector."""
+"""Tandem pipeline dispatcher: classifies task tier and routes to run_fast/standard/strong."""
 
 from __future__ import annotations
 
 import logging
-from enum import Enum
-from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
-
-if TYPE_CHECKING:
-    from .backends.mistral_api import MistralAPIBackend
+from .generator import GenerationResult
 
 logger = logging.getLogger(__name__)
 
 _CLASSIFIER_SYSTEM = (
-    "You are a task classifier. Reply with exactly one word: "
-    "SIMPLE, STANDARD, or COMPLEX.\n"
-    "SIMPLE: single function, syntax fix, hello world, trivial snippet\n"
+    "You are a task classifier. Reply with exactly one word: FAST, STANDARD, or STRONG.\n"
+    "FAST: single function, syntax fix, hello world, trivial snippet\n"
     "STANDARD: complete module, API endpoint, data structure, test suite\n"
-    "COMPLEX: multi-file changes, debugging existing code, "
-    "architecture, refactor, anything needing codebase context"
+    "STRONG: multi-file changes, debugging, architecture, refactor, "
+    "anything needing codebase context"
 )
 
-_MISTRAL_PREFIXES = ("mistral", "codestral", "mixtral", "magistral")
+# Kept for backward compat with any code that imported the old enum
+from enum import Enum
 
 
 class TaskComplexity(Enum):
@@ -31,97 +26,83 @@ class TaskComplexity(Enum):
     COMPLEX = "complex"
 
 
-class ModelConfig(BaseModel):
-    backend: str           # "mistral-api" | "ollama"
-    model: str
-    reasoning_effort: str  # "none" | "high"
-    rationale: str         # complexity tier that drove this choice
+class TandemRouter:
+    async def classify(self, prompt: str, language: str) -> str:
+        """Ask THINKER to classify the task. Falls back to STANDARD on timeout/error."""
+        from .backends.ollama import THINKER
 
-
-def _is_ollama_model(name: str) -> bool:
-    """Ollama models typically carry a tag (e.g. devstral:24b); Mistral names don't."""
-    if ":" in name:
-        return True
-    return not any(name.lower().startswith(p) for p in _MISTRAL_PREFIXES)
-
-
-class TaskRouter:
-    def __init__(self, fast_backend: "MistralAPIBackend") -> None:
-        self._fast = fast_backend  # used only for cheap classification calls
-
-    async def classify(
-        self,
-        prompt: str,
-        language: str,
-        context_files: list[str] | None = None,
-    ) -> TaskComplexity:
-        user_msg = f"Language: {language}\nTask: {prompt}"
-        if context_files:
-            user_msg += f"\nContext files: {', '.join(context_files)}"
         try:
-            result = await self._fast.generate(
-                prompt=user_msg,
+            result = await THINKER.generate(
+                f"Language: {language}\nTask: {prompt}",
                 system=_CLASSIFIER_SYSTEM,
-                reasoning_effort="none",
-                max_tokens=10,
                 temperature=0.0,
-                timeout=3.0,
+                max_tokens=50,
+                timeout=10.0,
             )
-            word = result.text.strip().split()[0].upper()
-            return {
-                "SIMPLE": TaskComplexity.SIMPLE,
-                "STANDARD": TaskComplexity.STANDARD,
-                "COMPLEX": TaskComplexity.COMPLEX,
-            }.get(word, TaskComplexity.STANDARD)
+            text = result.text.strip()
+            # Strip deepseek-r1 thinking blocks
+            if "</think>" in text:
+                text = text.split("</think>")[-1].strip()
+            word = text.split()[0].upper() if text else "STANDARD"
+            return word if word in ("FAST", "STANDARD", "STRONG") else "STANDARD"
         except Exception as exc:
-            logger.warning("Task classification failed (%s), defaulting to STANDARD", exc)
-            return TaskComplexity.STANDARD
+            logger.warning("Classification failed (%s), defaulting to STANDARD", exc)
+            return "STANDARD"
 
-    async def route(
+    async def route_and_run(
         self,
         prompt: str,
         language: str,
         context_files: list[str] | None = None,
-        force_model: str | None = None,
-        mistral_model: str = "mistral-small-latest",
-        ollama_model: str = "devstral:24b",
-    ) -> ModelConfig:
-        if force_model:
-            if _is_ollama_model(force_model):
-                return ModelConfig(
-                    backend="ollama",
-                    model=force_model,
-                    reasoning_effort="none",
-                    rationale="forced",
-                )
-            return ModelConfig(
-                backend="mistral-api",
-                model=force_model,
-                reasoning_effort="none",
-                rationale="forced",
-            )
+        force_tier: str | None = None,
+        web_context: bool = False,
+    ) -> GenerationResult:
+        from .backends.ollama import CODER
+        from .tandem import run_fast, run_standard, run_strong
 
-        # Presence of context_files implies multi-file / complex work
+        # Multi-file always escalates to STRONG
         if context_files:
-            return ModelConfig(
-                backend="mistral-api",
-                model=mistral_model,
-                reasoning_effort="high",
-                rationale=TaskComplexity.COMPLEX.value,
-            )
+            tier = "STRONG"
+        elif force_tier:
+            tier = force_tier.upper()
+        else:
+            tier = await self.classify(prompt, language)
 
-        complexity = await self.classify(prompt, language, context_files)
+        logger.info("Tier=%s language=%s web_context=%s", tier, language, web_context)
 
-        if complexity == TaskComplexity.COMPLEX:
-            return ModelConfig(
-                backend="mistral-api",
-                model=mistral_model,
-                reasoning_effort="high",
-                rationale=complexity.value,
-            )
-        return ModelConfig(
-            backend="mistral-api",
-            model=mistral_model,
-            reasoning_effort="none",
-            rationale=complexity.value,
-        )
+        if tier == "FAST":
+            try:
+                return await run_fast(prompt, language)
+            except Exception as e:
+                logger.warning("FAST tier failed (%s), falling back to CODER direct", e)
+                result = await CODER.generate(prompt)
+                result.tier = "fast-fallback"
+                return result
+
+        if tier == "STANDARD":
+            try:
+                return await run_standard(prompt, language)
+            except Exception as e:
+                logger.warning("STANDARD failed (%s), falling back to CODER only", e)
+                return await run_fast(prompt, language)
+
+        # STRONG
+        try:
+            return await run_strong(prompt, language, context_files, web_context)
+        except Exception as e:
+            logger.warning("STRONG failed (%s), falling back to STANDARD", e)
+            try:
+                return await run_standard(prompt, language)
+            except Exception as e2:
+                logger.warning("STANDARD also failed (%s), CODER-only fallback", e2)
+                return await run_fast(prompt, language)
+
+
+_router: TandemRouter | None = None
+
+
+def get_router() -> TandemRouter:
+    global _router
+    if _router is None:
+        _router = TandemRouter()
+    return _router
