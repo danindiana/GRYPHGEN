@@ -1,0 +1,41 @@
+digraph GRYPHGEN_Overview {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    root [label="GRYPHGEN", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_core {
+        label="Core Modules";
+        fontcolor="#39ff14";
+        agentic [label="agentic\n(Python/AI)"];
+        gstruct [label="gstruct\n(Structure/LLM)"];
+        perl_pipes [label="perl_pipes\n(Perl/Backend)"];
+    }
+
+    subgraph cluster_services {
+        label="Services & Servers";
+        fontcolor="#39ff14";
+        mcp [label="MCP_SERVER\n(Model Context Protocol)"];
+        ollama [label="ollama-duel\n(Rust/Local LLM)"];
+        rag [label="rag\n(Knowledge Base)"];
+    }
+
+    subgraph cluster_research {
+        label="Research & Analysis";
+        fontcolor="#39ff14";
+        jan [label="jan13/jan14\n(Agents/Modernization)"];
+        aug [label="Aug_20_2025\n(Novelty LLM)"];
+        calisota [label="calisota-ai\n(August 2025)"];
+    }
+
+    root -> agentic;
+    root -> gstruct;
+    root -> perl_pipes;
+    root -> mcp;
+    root -> ollama;
+    root -> rag;
+    root -> jan;
+    root -> aug;
+    root -> calisota;
+}

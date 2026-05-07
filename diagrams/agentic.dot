@@ -1,0 +1,41 @@
+digraph Agentic_Architecture {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    agentic [label="Agentic Module", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_src {
+        label="Source & Logic";
+        fontcolor="#39ff14";
+        src [label="src/"];
+        webui [label="webui/"];
+        configs [label="configs/"];
+    }
+
+    subgraph cluster_infra {
+        label="Infrastructure";
+        fontcolor="#39ff14";
+        docker [label="Docker & Compose"];
+        k8s [label="Kubernetes"];
+        alembic [label="Alembic (DB)"];
+    }
+
+    subgraph cluster_qa {
+        label="Quality & Docs";
+        fontcolor="#39ff14";
+        tests [label="Tests"];
+        docs [label="Documentation"];
+        logs [label="Logs"];
+    }
+
+    agentic -> src;
+    agentic -> webui;
+    agentic -> docker;
+    agentic -> tests;
+
+    src -> configs;
+    docker -> k8s;
+    src -> alembic;
+    tests -> logs;
+}

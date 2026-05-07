@@ -1,0 +1,40 @@
+digraph GStruct_Components {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    gstruct [label="GStruct Module", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_logic {
+        label="Core Logic";
+        fontcolor="#39ff14";
+        main [label="GRYPHGEN.py"];
+        symaug [label="SYMAUG/"];
+        symorg [label="SYMORG/"];
+        symorq [label="SYMORQ/"];
+    }
+
+    subgraph cluster_support {
+        label="Support";
+        fontcolor="#39ff14";
+        config [label="config/"];
+        utils [label="utils/"];
+        tests [label="tests/"];
+    }
+
+    subgraph cluster_deployment {
+        label="Deployment";
+        fontcolor="#39ff14";
+        docker [label="Dockerfile"];
+        compose [label="docker-compose.yml"];
+    }
+
+    gstruct -> main;
+    main -> symaug;
+    main -> symorg;
+    main -> symorq;
+    gstruct -> config;
+    gstruct -> utils;
+    gstruct -> docker;
+    docker -> compose;
+}

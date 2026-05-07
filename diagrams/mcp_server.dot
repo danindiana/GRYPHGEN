@@ -1,0 +1,40 @@
+digraph MCP_Server_Design {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    mcp [label="MCP Server Module", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_research {
+        label="Research Phase";
+        fontcolor="#39ff14";
+        gemini [label="gemini_research.md"];
+        perplexity [label="perplexity_research.md"];
+    }
+
+    subgraph cluster_design {
+        label="Design Phase";
+        fontcolor="#39ff14";
+        expanded [label="expanded_design.md"];
+        system [label="system_overview.md"];
+        swarm [label="meta_API_swarm.md"];
+    }
+
+    subgraph cluster_implementation {
+        label="Implementation/Tools";
+        fontcolor="#39ff14";
+        gateway [label="public_facing_gateway.md"];
+        fuzzer [label="testing_harness_fuzzer.md"];
+        handler [label="doc_handler.md"];
+    }
+
+    mcp -> gemini;
+    mcp -> perplexity;
+    gemini -> expanded;
+    perplexity -> expanded;
+    expanded -> system;
+    system -> swarm;
+    swarm -> gateway;
+    gateway -> fuzzer;
+    gateway -> handler;
+}

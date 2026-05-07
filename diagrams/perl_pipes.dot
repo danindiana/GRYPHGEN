@@ -1,0 +1,27 @@
+digraph PerlPipes_Workflow {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    perl_pipes [label="Perl Pipes Module", shape=hexagon, color="#39ff14", penwidth=2];
+
+    bin [label="bin/ (Executables)"];
+    lib [label="lib/ (Modules)"];
+    config [label="config/"];
+    logs [label="logs/"];
+
+    subgraph cluster_env {
+        label="Environment";
+        fontcolor="#39ff14";
+        cpanfile [label="cpanfile"];
+        docker [label="Docker"];
+    }
+
+    perl_pipes -> bin;
+    perl_pipes -> lib;
+    perl_pipes -> config;
+    bin -> lib [label="Uses"];
+    lib -> logs [label="Writes"];
+    perl_pipes -> cpanfile;
+    perl_pipes -> docker;
+}
