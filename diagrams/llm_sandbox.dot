@@ -1,0 +1,37 @@
+digraph LLM_Sandbox_CLI {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    sandbox [label="LLM-Sandbox CLI", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_variants {
+        label="Implementations";
+        fontcolor="#39ff14";
+        barebones [label="barebones/"];
+        multi_llm [label="multi-llm/"];
+        shellgenie [label="ShellGenie/"];
+    }
+
+    subgraph cluster_frontend {
+        label="Interface";
+        fontcolor="#39ff14";
+        react [label="react_front/"];
+        perl [label="perl_parser/"];
+    }
+
+    subgraph cluster_docs {
+        label="Documentation Versions";
+        fontcolor="#39ff14";
+        v1 [label="v1-v6"];
+        v7 [label="v7 (Latest)"];
+        devops [label="DevOps/Install"];
+    }
+
+    sandbox -> barebones;
+    sandbox -> multi_llm;
+    sandbox -> shellgenie;
+    sandbox -> react;
+    sandbox -> perl;
+    sandbox -> v7;
+}

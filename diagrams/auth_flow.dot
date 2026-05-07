@@ -1,0 +1,27 @@
+digraph Auth_Module_Flow {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    auth [label="Auth Sibling", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_src {
+        label="Application Logic";
+        fontcolor="#39ff14";
+        api_keys [label="src/auth/api_keys.py"];
+        router [label="src/services/code_generation/router.py"];
+        config [label="src/common/config.py"];
+    }
+
+    subgraph cluster_scripts {
+        label="Utilities";
+        fontcolor="#39ff14";
+        keygen [label="scripts/keygen.py"];
+    }
+
+    auth -> api_keys;
+    auth -> router;
+    auth -> config;
+    keygen -> api_keys [label="Generates"];
+    router -> api_keys [label="Validates"];
+}

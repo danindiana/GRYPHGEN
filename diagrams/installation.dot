@@ -1,0 +1,30 @@
+digraph Installation_System {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=LR, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    install [label="Installation Module", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_logic {
+        label="Provisioning";
+        fontcolor="#39ff14";
+        scripts [label="scripts/"];
+        configs [label="configs/"];
+        docker [label="docker/"];
+    }
+
+    subgraph cluster_legacy {
+        label="Maintenance";
+        fontcolor="#39ff14";
+        legacy [label="legacy/"];
+        tests [label="tests/"];
+        docs [label="docs/"];
+    }
+
+    install -> scripts;
+    install -> configs;
+    install -> docker;
+    install -> legacy;
+    scripts -> tests [label="Validated by"];
+    scripts -> configs [label="Uses"];
+}

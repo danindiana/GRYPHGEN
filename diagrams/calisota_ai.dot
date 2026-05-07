@@ -1,0 +1,26 @@
+digraph Calisota_AI_Structure {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    calisota [label="Calisota AI", shape=hexagon, color="#39ff14", penwidth=2];
+
+    subgraph cluster_timeline {
+        label="Timeline & History";
+        fontcolor="#39ff14";
+        july [label="July 2025"];
+        august [label="August 2025"];
+        september [label="September 2025"];
+        october [label="October 2025"];
+        feb [label="February 2026"];
+    }
+
+    rag [label="RAG-X670E\n(Specialized Knowledge)", color="#ff00ff"];
+
+    calisota -> july;
+    calisota -> august;
+    calisota -> september;
+    calisota -> october;
+    calisota -> feb;
+    calisota -> rag;
+}

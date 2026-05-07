@@ -1,0 +1,16 @@
+digraph Workspace_Integration {
+    graph [bgcolor="#0d1117", fontname="Helvetica", fontcolor="#ffffff", rankdir=TB, overlap=false, splines=true];
+    node [shape=box, style="filled,rounded", fillcolor="#161b22", color="#00d4ff", fontcolor="#ffffff", fontname="Helvetica"];
+    edge [color="#ff00ff", arrowhead=vee];
+
+    root [label="Workspace Root", shape=hexagon, color="#39ff14", penwidth=2];
+
+    gryphgen [label="GRYPHGEN Core\n(Main Application)", color="#39ff14"];
+    auth_module [label="gryphgen-api-key-auth\n(Auth Sibling)", color="#39ff14"];
+
+    root -> gryphgen;
+    root -> auth_module;
+
+    auth_module -> gryphgen [label="Secures", color="#00d4ff"];
+    gryphgen -> auth_module [label="Requests Auth", color="#ff00ff"];
+}
