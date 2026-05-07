@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "wizard",
+    "ollama-duel",
+]
+resolver = "2"

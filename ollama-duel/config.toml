@@ -47,8 +47,8 @@ timeout_secs = 180
 [[mcp_servers]]
 name    = "filesystem"
 command = "npx"
-args    = ["-y", "@modelcontextprotocol/server-filesystem", "/home"]
-enabled = false   # set to true after: npm i -g @modelcontextprotocol/server-filesystem
+args    = ["-y", "@modelcontextprotocol/server-filesystem", "/home/jeb/Documents/claude_creations/2026-05-06_gryphgen-modernization"]
+enabled = true
 
 # Brave Search (requires BRAVE_API_KEY env var)
 [[mcp_servers]]
