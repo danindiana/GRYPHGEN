@@ -162,7 +162,7 @@
 
 <div id="viewer-container">
     <div id="loading">ENCRYPTING DATA...</div>
-    <embed id="svg-viewer" type="image/svg+xml" src="overview.svg" />
+    <object id="svg-viewer" type="image/svg+xml" data="overview.svg"></object>
     
     <div id="controls">
         <button onclick="panZoom.zoomIn()">+</button>
@@ -178,14 +178,18 @@
 
     function initPanZoom() {
         if (panZoom) panZoom.destroy();
-        panZoom = svgPanZoom('#svg-viewer', {
-            zoomEnabled: true,
-            controlIconsEnabled: false,
-            fit: true,
-            center: true,
-            minZoom: 0.1,
-            maxZoom: 10
-        });
+        try {
+            panZoom = svgPanZoom('#svg-viewer', {
+                zoomEnabled: true,
+                controlIconsEnabled: false,
+                fit: true,
+                center: true,
+                minZoom: 0.1,
+                maxZoom: 10
+            });
+        } catch (e) {
+            console.error("PanZoom failed to initialize:", e);
+        }
     }
 
     viewer.addEventListener('load', function() {
@@ -203,7 +207,7 @@
             
             // Load new SVG
             loading.style.display = 'block';
-            viewer.setAttribute('src', svgFile);
+            viewer.setAttribute('data', svgFile);
         });
     });
 
